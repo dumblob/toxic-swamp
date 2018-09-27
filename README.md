@@ -1,4 +1,4 @@
-# webminerpool 
+# webminerpool
 
 **Complete sources** for a Monero (cryptonight/cryptonight-lite) webminer. **Hard fork ready**.
 
@@ -7,28 +7,37 @@
 _The server_ is written in **C#**, **optionally calling C**-routines to check hashes calculated by the clients. It acts as a proxy server for common pools.
 
 
-_The client_ runs in the browser using javascript and webassembly. 
+_The client_ runs in the browser using javascript and webassembly.
 **websockets** are used for the connection between the client and the server, **webassembly** to perform hash calculations, **web workers** for threads.
 
-# What is new (you really should update!)?
+Thanks to [nierdz](https://github.com/notgiven688/webminerpool/pull/62) there is a **docker** file available. See below.
 
-- **June 15, 2018** 
+# Will the hardfork (October 2018) be supported?
+
+Yes. Update to the current master branch and you are ready for the October 2018 hard fork.
+
+# What is new?
+
+- **September 27, 2018**
+	- Added cryptonight v2. Hard fork ready! (**client-side** / **server-side**).
+
+- **June 15, 2018**
 	- Support for blocks with more than 2^8 transactions. (**client-side** / **server-side**).
 
-- **May 21, 2018** 
+- **May 21, 2018**
 	- Support for multiple open tabs. Only one tab is constantly mining if several tabs/browser windows are open. (**client-side**).
 
-- **May 6, 2018** 
+- **May 6, 2018**
 	- Check if webasm is available. Please update the script. (**client-side**).
 
-- **May 5, 2018** 
+- **May 5, 2018**
 	- Support for multiple websocket servers in the client script (load-distribution).
 
-- **April 26, 2018** 
+- **April 26, 2018**
 	- A further improvement to fully support the [extended stratum protocol](https://github.com/xmrig/xmrig-proxy/blob/dev/doc/STRATUM_EXT.md#mining-algorithm-negotiation)  (**server-side**).
 	- A simple json config-file holding all available pools (**server-side**).
 
-- **April 22, 2018** 
+- **April 22, 2018**
 	- All cryptonight and cryptonight-light based coins are supported in a single miner. [Stratum extension](https://github.com/xmrig/xmrig-proxy/blob/dev/doc/STRATUM_EXT.md#mining-algorithm-negotiation) were implemented: The server now takes pool suggestions (algorithm and variant) into account. Defaults can be specified for each pool - that makes it possible to mine coins like Stellite, Turtlecoin,.. (**client/server-side**)
 	- Client reconnect time gets larger with failed attempts. (**client-side**)
 
@@ -45,7 +54,7 @@ The SDK directory contains all client side mining scripts which allow mining in 
 
 <script>
 	server = "ws://localhost:8181"
-	startMining("minexmr.com","49kkH7rdoKyFsb1kYPKjCYiR2xy1XdnJNAY1e7XerwQFb57XQaRP7Npfk5xm1MezGn2yRBz6FWtGCFVKnzNTwSGJ3ZrLtHU"); 
+	startMining("minexmr.com","49kkH7rdoKyFsb1kYPKjCYiR2xy1XdnJNAY1e7XerwQFb57XQaRP7Npfk5xm1MezGn2yRBz6FWtGCFVKnzNTwSGJ3ZrLtHU");
 </script>
 ```
 webmr.js can be found under SDK/miner_compressed.
@@ -62,7 +71,7 @@ startMining(pool, address, password, numThreads, userid);
 - numThreads, the number of threads the miner uses. Use "-1" for auto-config.
 - userid, allows you to identify the number of hashes calculated by a user. Can be any string with a length < 200 characters.
 
-To **throttle** the miner just use the global variable "throttleMiner", e.g. 
+To **throttle** the miner just use the global variable "throttleMiner", e.g.
 
 ```javascript
 startMining(..);
@@ -70,7 +79,7 @@ throttleMiner = 20;
 ```
 
 If you set this value to 20, the cpu workload will be approx. 80% (for 1 thread / CPU). Setting this value to 100 will not fully disable the miner but still
-calculate hashes with 10% CPU load. 
+calculate hashes with 10% CPU load.
 
 If you do not want to show the user your address or even the password you have to create  a *loginid*. With the *loginid* you can start mining with
 
@@ -88,7 +97,7 @@ Get a *loginid* by opening *register.html* in SDK/other. You also find a script 
 
 #### What are all the *.js files?
 
-SDK/miner_compressed/webmr.js simply combines 
+SDK/miner_compressed/webmr.js simply combines
 
  1. SDK/miner_raw/miner.js
  2. SDK/miner_raw/worker.js
@@ -147,4 +156,3 @@ to turn it off or just find the content of this repository helpful consider a on
 - BTC - 175jHD6ErDhZHoW4u54q5mr98L9KSgm56D
 - XMR - 49kkH7rdoKyFsb1kYPKjCYiR2xy1XdnJNAY1e7XerwQFb57XQaRP7Npfk5xm1MezGn2yRBz6FWtGCFVKnzNTwSGJ3ZrLtHU
 - AEON - WmtUFkPrboCKzL5iZhia4iNHKw9UmUXzGgbm5Uo3HPYwWcsY1JTyJ2n335gYiejNysLEs1G2JZxEm3uXUX93ArrV1yrXDyfPH
-
