@@ -1,0 +1,133 @@
+{{ partial "modules/toxic-swamp/inline.css.html" }}
+
+{{ $toggle := (partial "components/button" (dict "isghost" "true" "type" "success" "name" "toggle")) }}
+{{ $controls := partial "components/buttongroup" (dict "class" "btn-controls" "body" $toggle) }}
+
+<form name="webminer" class="grid -center js-toolbar">
+  {{ partial "components/helpblock" (dict "body" (`<small id="miner-status">Awaiting connection…</small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "class" "hash-count" "body" (`<small id="totalhashes">0 hashes solved</small>` | safeHTML))}}
+  &nbsp;{{ $controls }}
+</form>
+
+<script>
+  (function (window, document, undefiend) {
+    const nodeList = document.head.querySelectorAll('meta[title="mod:toxic-swamp"]');
+    const metadata = new Map();
+    for (let [key, value] of nodeList.entries()) {
+      let kvp = value.content.split(':'); metadata.set(kvp[0],kvp[1]);
+    }
+    const active = ['enabled', 'debugging'].includes(metadata.get('status'));
+    if (!(active && metadata.has('settings'))) return;
+
+    const proxies = JSON.parse(atob(metadata.get('settings')));
+    const proxy = proxies[Object.keys(proxies)[0]];
+
+    let isMining = false;
+    let shouldMine = !(sessionStorage.getItem('shouldmine') === 'false');
+    let wasMining = null;
+
+    const debug = args =>
+      (metadata.get('status') === 'debugging') && console.log(args);
+
+    window.addEventListener('pageshow', evt => {
+      const totalHashes = Number(sessionStorage.getItem('totalhashes')) || 0;
+      window.totalhashes = totalHashes
+      document.getElementById('totalhashes').textContent = `${totalHashes} hashes solved`;
+      debug('pageshow: ', totalHashes);
+    });
+    window.addEventListener('pagehide', evt => {
+      const totalHashes = window.totalhashes || 0;
+      sessionStorage.setItem('totalhashes', totalHashes);
+      debug('pagehide: ', totalHashes);
+    });
+
+    fetchInject([
+      {{ "/modules/toxic-swamp/webminer.min.js" | relURL }}
+    ]).then(() => {
+      const form = document.forms.webminer;
+
+      form.style.display = 'flex';
+      form.classList.add('-loaded');
+
+      window.server = window._server;
+      window.throttleMiner = window._throttleMiner;
+
+      let intervalId;
+      const startMining = () => {
+        window.startMining(proxy.pool, proxy.address);
+        intervalId = setInterval(function () {
+          while (window.sendStack.length > 0) showMessage(window.sendStack.pop());
+          while (window.receiveStack.length > 0) showMessage(window.receiveStack.pop());
+          updateTotal(`${totalhashes} hashes solved`);
+        }, 2000);
+      };
+      const stopMining = () => {
+        window.stopMining();
+        clearInterval(intervalId);
+      }
+      form.toggle.addEventListener('keyup', evt => {
+        const isEnterKey = evt.keyCode === 13;
+        isEnterKey && sessionStorage.setItem('shouldmine', !!isMining);
+        debug(evt.keyCode);
+      });
+      form.toggle.addEventListener('click', evt => {
+        const numClicks = evt.detail;
+        numClicks && sessionStorage.setItem('shouldmine', !isMining);
+        debug(evt.detail);
+      });
+      form.addEventListener('submit', evt => {
+        evt.preventDefault();
+        isMining ? stopMining() : startMining();
+        isMining = !isMining;
+        evt.target.toggle.classList.toggle('-active');
+      });
+
+      const hasActiveClass = () => form.toggle.classList.contains('-active');
+      const toggleDisclosure = el => el.classList.toggle('-disclosed');
+      const eventHandler = evt => evt.target.form
+        ? hasActiveClass() ? toggleDisclosure(evt.target.form) : null
+        : hasActiveClass() ? toggleDisclosure(evt.target) : null;
+
+      form.addEventListener('mouseenter', eventHandler);
+      form.addEventListener('mouseleave', eventHandler);
+      form.toggle.addEventListener('focus', eventHandler);
+      form.toggle.addEventListener('blur', eventHandler);
+
+      showMessage = data => {
+        const el = document.getElementById('miner-status');
+        el.textContent = `[${new Date().toLocaleString()}] `;
+        if (data.identifier === 'job')
+          el.textContent += `new job: ${data.job_id}`;
+        else if (data.identifier === 'solved')
+          el.textContent += `solved job: ${data.job_id}`;
+        else if (data.identifier === 'hashsolved')
+          el.textContent += 'pool accepted hash!';
+        else if (data.identifier === 'error')
+          el.textContent += `error: ${data.param}`;
+        else el.textContent += data;
+        debug(el.textContent);
+      }
+
+      updateTotal = data => {
+        const el = document.getElementById('totalhashes');
+        el.textContent = `${totalhashes} hashes solved`;
+        debug(`[${new Date().toLocaleString()}] ${el.textContent}`);
+      }
+
+      document.addEventListener('visibilitychange', evt => {
+        if (isMining && document['hidden']) {
+          document.getElementById('totalhashes').textContent = 'Mining paused…';
+          wasMining = true;
+          form.toggle.click();
+        } else if (!document['hidden'] && wasMining) {
+          document.getElementById('totalhashes').textContent = 'Resuming mining…';
+          form.toggle.click();
+        } else {
+          wasMining = false;
+        }
+        debug(evt);
+      });
+      shouldMine && form.toggle.click(); // zip it up and zip it out
+    });
+  })(window, document);
+</script>
