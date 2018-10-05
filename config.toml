@@ -1,0 +1,3 @@
+[params.defaults.modules.toxic_swamp]
+  proxies = ["test-proxy"]
+  # proxies = ["custom-proxy", "fire-swamp"]

@@ -2,3 +2,4 @@
 server/Server/bin
 server/Server/obj
 server/.vs/
+server/statistics.dat
