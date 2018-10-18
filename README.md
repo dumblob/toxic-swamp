@@ -15,19 +15,18 @@ For Toxic Swamp to operate during the beta period you'll need to [create your ow
 ## Installation
 
 1. Choose a module download source:
-
-- https://www.npmjs.com/package/toxic-swamp
-- https://www.jsdelivr.com/package/npm/toxic-swamp
-- https://git.habd.as/comfusion/toxic-swamp
+    - https://www.npmjs.com/package/toxic-swamp
+    - https://www.jsdelivr.com/package/npm/toxic-swamp
+    - https://git.habd.as/comfusion/toxic-swamp
 
 2. Extract module contents into site `themes` directory:
 
-   ```terminal
-   ├── static
-   └── themes
-       ├── after-dark
-       └── toxic-swamp
-   ```
+    ```sh
+    ├── static
+    └── themes
+        ├── after-dark
+        └── toxic-swamp
+    ```
 
 3. Specify module in site config:
 
@@ -40,7 +39,7 @@ For Toxic Swamp to operate during the beta period you'll need to [create your ow
 
 4. Miner now functional. Rebuild and serve your site to view the changes.
 
-For additional information please see the [Toxic Swamp help docs](https://after-dark.habd.as/module/toxic-swamp/).
+For release verification and additional information please see the [Toxic Swamp help docs](https://after-dark.habd.as/module/toxic-swamp/).
 
 ## License
 
