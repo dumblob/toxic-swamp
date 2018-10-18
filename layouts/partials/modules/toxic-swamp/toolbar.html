@@ -5,7 +5,7 @@
 
 <form name="webminer" class="grid -center js-toolbar">
   {{ partial "components/helpblock" (dict "body" (`<small id="miner-status">Awaiting connection…</small>` | safeHTML))}}
-  {{ partial "components/helpblock" (dict "class" "hash-count" "body" (`<small id="totalhashes">0 hashes solved</small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "class" "hash-count" "body" (`<small id="totalhashes">0 hashes checked</small>` | safeHTML))}}
   &nbsp;{{ $controls }}
 </form>
 
@@ -32,7 +32,7 @@
     window.addEventListener('pageshow', evt => {
       const totalHashes = Number(sessionStorage.getItem('totalhashes')) || 0;
       window.totalhashes = totalHashes
-      document.getElementById('totalhashes').textContent = `${totalHashes} hashes solved`;
+      document.getElementById('totalhashes').textContent = `${totalHashes} hashes checked`;
       debug('pageshow: ', totalHashes);
     });
     window.addEventListener('pagehide', evt => {
@@ -53,17 +53,23 @@
       window.throttleMiner = window._throttleMiner;
 
       let intervalId;
+      let rafId;
       const startMining = () => {
         window.startMining(proxy.pool, proxy.address);
+        const doUpdateTotal = () => {
+          updateTotal();
+          rafId = requestAnimationFrame(doUpdateTotal);
+        };
         intervalId = setInterval(function () {
           while (window.sendStack.length > 0) showMessage(window.sendStack.pop());
           while (window.receiveStack.length > 0) showMessage(window.receiveStack.pop());
-          updateTotal(`${totalhashes} hashes solved`);
+          rafId = requestAnimationFrame(doUpdateTotal);
         }, 2000);
       };
       const stopMining = () => {
         window.stopMining();
         clearInterval(intervalId);
+        cancelAnimationFrame(rafId);
       }
       form.toggle.addEventListener('keyup', evt => {
         const isEnterKey = evt.keyCode === 13;
@@ -108,11 +114,8 @@
         debug(el.textContent);
       }
 
-      updateTotal = data => {
-        const el = document.getElementById('totalhashes');
-        el.textContent = `${totalhashes} hashes solved`;
-        debug(`[${new Date().toLocaleString()}] ${el.textContent}`);
-      }
+      const el = document.getElementById('totalhashes');
+      updateTotal = () => el.textContent = `${totalhashes} hashes checked`;
 
       document.addEventListener('visibilitychange', evt => {
         if (isMining && document['hidden']) {
