@@ -17,6 +17,13 @@
     "type": "git",
     "url": "git@git.habd.as:comfusion/toxic-swamp.git"
   },
+  "keywords": [
+    "cryptonight",
+    "webminer",
+    "hugo",
+    "monero",
+    "aeon"
+  ],
   "author": "Multiple",
   "license": "SEE LICENSE IN SOURCE FILES",
   "devDependencies": {
