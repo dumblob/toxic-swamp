@@ -8,8 +8,8 @@
     }
   },
   "scripts": {
-    "update:webminer": "cp -i SDK/miner_compressed/webmr.js static/modules/toxic-swamp/webminer.min.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "update:client": "cp -i SDK/miner_compressed/webmr.js static/modules/toxic-swamp/webminer.min.js",
+    "test": "while true; do head -n 100 /dev/urandom; sleep 0.1; done | hexdump -C | grep 'ca fe'",
     "integrity": "npm pack --dry-run --json . | grep integrity | cut -d ',' -f1 | cut -d ':' -f2 | tr -d '\" '",
     "release": "standard-version --sign"
   },
