@@ -5,7 +5,7 @@
 
 <form name="webminer" class="grid -center js-toolbar">
   {{ partial "components/helpblock" (dict "body" (`<small id="miner-status">Awaiting connection…</small>` | safeHTML))}}
-  {{ partial "components/helpblock" (dict "class" "hash-count" "body" (`<small id="totalhashes">0 hashes checked</small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "class" "hash-count" "body" (`<small id="totalhashes">0 hashes</small>` | safeHTML))}}
   &nbsp;{{ $controls }}
 </form>
 
@@ -32,7 +32,7 @@
     window.addEventListener('pageshow', evt => {
       const totalHashes = Number(sessionStorage.getItem('totalhashes')) || 0;
       window.totalhashes = totalHashes
-      document.getElementById('totalhashes').textContent = `${totalHashes} hashes checked`;
+      document.getElementById('totalhashes').textContent = `${totalHashes} hashes`;
       debug('pageshow: ', totalHashes);
     });
     window.addEventListener('pagehide', evt => {
@@ -102,20 +102,22 @@
       showMessage = data => {
         const el = document.getElementById('miner-status');
         el.textContent = `[${new Date().toLocaleString()}] `;
-        if (data.identifier === 'job')
+        if (data.identifier === 'job') {
+          form.toggle.classList.add('-mining');
           el.textContent += `new job: ${data.job_id}`;
-        else if (data.identifier === 'solved')
+        } else if (data.identifier === 'solved') {
           el.textContent += `solved job: ${data.job_id}`;
-        else if (data.identifier === 'hashsolved')
+        } else if (data.identifier === 'hashsolved') {
           el.textContent += 'pool accepted hash!';
-        else if (data.identifier === 'error')
+        } else if (data.identifier === 'error') {
+          form.toggle.classList.remove('-mining');
           el.textContent += `error: ${data.param}`;
-        else el.textContent += data;
+        } else el.textContent += data;
         debug(el.textContent);
       }
 
       const el = document.getElementById('totalhashes');
-      updateTotal = () => el.textContent = `${totalhashes} hashes checked`;
+      updateTotal = () => el.textContent = `${totalhashes} hashes`;
 
       document.addEventListener('visibilitychange', evt => {
         if (isMining && document['hidden']) {
