@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.4"></a>
+# [1.0.0-beta.4](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2018-10-22)
+
+
+### Features
+
+* **layouts/toolbar:** add stateful throttle control ([76067de](https://git.habd.as/comfusion/toxic-swamp/commits/76067de)), closes [#4](https://git.habd.as/comfusion/toxic-swamp/issues/4)
+
+
+
 <a name="1.0.0-beta.3"></a>
 # [1.0.0-beta.3](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2018-10-20)
 
