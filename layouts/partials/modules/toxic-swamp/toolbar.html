@@ -4,8 +4,11 @@
 {{ $controls := partial "components/buttongroup" (dict "class" "btn-controls" "body" $toggle) }}
 
 <form name="webminer" class="grid -center js-toolbar">
-  {{ partial "components/helpblock" (dict "body" (`<small id="miner-status">Awaiting connection…</small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "body" (`<small id="miner-status">Waiting for server…</small>` | safeHTML))}}
   {{ partial "components/helpblock" (dict "class" "hash-count" "body" (`<small id="totalhashes">0 hashes</small>` | safeHTML))}}
+  <fieldset name="throttlegroup">
+    <input name="throttle" type="range" orient="vertical" min="10" max="100" step="5" value="30">
+  </fieldset>
   &nbsp;{{ $controls }}
 </form>
 
@@ -22,9 +25,12 @@
     const proxies = JSON.parse(atob(metadata.get('settings')));
     const proxy = proxies[Object.keys(proxies)[0]];
 
-    let isMining = false;
-    let shouldMine = !(sessionStorage.getItem('shouldmine') === 'false');
-    let wasMining = null;
+    const state = {
+      isMining: false,
+      shouldMine: !(sessionStorage.getItem('shouldmine') === 'false'),
+      wasMining: null,
+      throttle: sessionStorage.getItem('throttle')
+    };
 
     const debug = args =>
       (metadata.get('status') === 'debugging') && console.log(args);
@@ -50,7 +56,7 @@
       form.classList.add('-loaded');
 
       window.server = window._server;
-      window.throttleMiner = window._throttleMiner;
+      window.throttleMiner = state.throttle || window._throttleMiner;
 
       let intervalId;
       let rafId;
@@ -71,20 +77,21 @@
         clearInterval(intervalId);
         cancelAnimationFrame(rafId);
       }
+
       form.toggle.addEventListener('keyup', evt => {
         const isEnterKey = evt.keyCode === 13;
-        isEnterKey && sessionStorage.setItem('shouldmine', !!isMining);
+        isEnterKey && sessionStorage.setItem('shouldmine', !!state.isMining);
         debug(evt.keyCode);
       });
       form.toggle.addEventListener('click', evt => {
         const numClicks = evt.detail;
-        numClicks && sessionStorage.setItem('shouldmine', !isMining);
+        numClicks && sessionStorage.setItem('shouldmine', !state.isMining);
         debug(evt.detail);
       });
       form.addEventListener('submit', evt => {
         evt.preventDefault();
-        isMining ? stopMining() : startMining();
-        isMining = !isMining;
+        state.isMining ? stopMining() : startMining();
+        state.isMining = !state.isMining;
         evt.target.toggle.classList.toggle('-active');
       });
 
@@ -96,8 +103,19 @@
 
       form.addEventListener('mouseenter', eventHandler);
       form.addEventListener('mouseleave', eventHandler);
+      form.throttlegroup.addEventListener('mouseenter', eventHandler);
+      form.throttlegroup.addEventListener('mouseleave', eventHandler);
       form.toggle.addEventListener('focus', eventHandler);
       form.toggle.addEventListener('blur', eventHandler);
+      form.throttle.addEventListener('focus', eventHandler);
+      form.throttle.addEventListener('blur', eventHandler);
+
+      form.throttle.addEventListener('change', evt => {
+        const throttle = 100 - evt.target.value;
+        window.throttleMiner = throttle;
+        sessionStorage.setItem('throttle', throttle);
+        debug(evt);
+      });
 
       showMessage = data => {
         const el = document.getElementById('miner-status');
@@ -120,19 +138,21 @@
       updateTotal = () => el.textContent = `${totalhashes} hashes`;
 
       document.addEventListener('visibilitychange', evt => {
-        if (isMining && document['hidden']) {
+        if (state.isMining && document['hidden']) {
           document.getElementById('totalhashes').textContent = 'Mining paused…';
-          wasMining = true;
+          state.wasMining = true;
           form.toggle.click();
-        } else if (!document['hidden'] && wasMining) {
+        } else if (!document['hidden'] && state.wasMining) {
           document.getElementById('totalhashes').textContent = 'Resuming mining…';
           form.toggle.click();
         } else {
-          wasMining = false;
+          state.wasMining = false;
         }
         debug(evt);
       });
-      shouldMine && form.toggle.click(); // zip it up and zip it out
+
+      form.throttle.value = 100 - window.throttleMiner;
+      state.shouldMine && form.toggle.click(); // zip it up and zip it out
     });
   })(window, document);
 </script>

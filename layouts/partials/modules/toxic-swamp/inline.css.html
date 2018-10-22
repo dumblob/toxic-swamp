@@ -1,8 +1,27 @@
 <style>
+  :root {
+    --control-focus: drop-shadow(0 0 3px #00b0ff) brightness(1.2) drop-shadow(0 0 15px #ff2e88) brightness(.7) drop-shadow(0 0 135px #00b0ff) brightness(2);
+  }
   .inactive {
     /* TODO: handle offline, out of focus, explicitly disabled, not powered */
   }
-  @keyframes activate {
+  @keyframes reveal {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes fadeUp {
+    from {
+      opacity: 0.6;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes revealSlide {
     from {
       transform: translateX(1%);
       opacity: 0;
@@ -18,7 +37,7 @@
   }
   @keyframes glowing {
     0% {
-      filter: drop-shadow(0 0 3px #00b0ff) brightness(1.2) drop-shadow(0 0 15px #ff2e88) brightness(.7) drop-shadow(0 0 135px #00b0ff) brightness(2);
+      filter: var(--control-focus);
     }
     50% {
       filter: drop-shadow(0 0 2px #00b0ff) brightness(1) drop-shadow(0 0 1px #00b0ff) brightness(2);
@@ -38,7 +57,7 @@
     margin-left: 20px;
   }
   .js-toolbar.-loaded {
-    animation: intro 0.3s both;
+    animation: reveal 0.3s both;
     animation-delay: 0.15s;
   }
   .js-toolbar.-disclosed {
@@ -48,11 +67,14 @@
     animation: spin 0.3s 5s 1 linear;
   }
   .js-toolbar.-disclosed .help-block.hash-count {
-    animation: activate ease-in both reverse;
+    animation: revealSlide ease-in both reverse;
   }
   .js-toolbar .help-block:not(.hash-count) {
     opacity: 0;
     margin-left: 1rem;
+  }
+  .js-toolbar [name="throttle"] {
+    opacity: 0.6;
   }
   @media screen and (max-width: 768px) {
     .js-toolbar {
@@ -74,34 +96,68 @@
     padding-right: 50px;
   }
   .js-toolbar.-disclosed .help-block {
-    animation: activate 0.3s 0.15s both;
+    animation: revealSlide 0.3s 0.15s both;
   }
-  .btn-controls {
+  .js-toolbar.-disclosed [name="throttle"] {
+    animation: fadeUp 0.3s both;
+  }
+  .js-toolbar [name="throttlegroup"] {
+    width: 40px;
+    height: 180px;
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+  }
+  .js-toolbar .btn-controls {
     display: inline-block;
     overflow: visible;
   }
-  .btn-controls button[name="toggle"].btn.btn-ghost {
+  .js-toolbar .btn-controls button[name="toggle"].btn.btn-ghost {
     line-height: 0;
     padding: 0.5rem;
     border: none;
   }
-  .btn-controls button[name="toggle"]:focus::after {
+  .js-toolbar .btn-controls button[name="toggle"]:focus::after {
     content: " " url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%20width='24'%20height='24'%20fill='currentcolor'%20stroke='fuchsia'%20stroke-linecap='round'%20stroke-linejoin='round'%20stroke-width='2'%3E%20%20%20%20%20%3Cpath%20d='M18%2013%20L26%202%208%2013%2014%2019%206%2030%2024%2019%20Z'%20/%3E%20%3C/svg%3E");
   }
-  .btn-controls button[name="toggle"]::after {
+  .js-toolbar .btn-controls button[name="toggle"]::after {
     content: " " url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%20width='24'%20height='24'%20fill='currentcolor'%20stroke='lime'%20stroke-linecap='round'%20stroke-linejoin='round'%20stroke-width='2'%3E%20%20%20%20%20%3Cpath%20d='M18%2013%20L26%202%208%2013%2014%2019%206%2030%2024%2019%20Z'%20/%3E%20%3C/svg%3E");
   }
-  .btn-controls button[name="toggle"].-active::after {
+  .js-toolbar .btn-controls button[name="toggle"].-active::after {
     content: " " url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%20width='24'%20height='24'%20fill='fuchsia'%20stroke='lime'%20stroke-linecap='round'%20stroke-linejoin='round'%20stroke-width='2'%3E%20%20%20%20%20%3Cpath%20d='M18%2013%20L26%202%208%2013%2014%2019%206%2030%2024%2019%20Z'%20/%3E%20%3C/svg%3E");
     animation: glowing 2s infinite paused;
-    filter: drop-shadow(0 0 3px #00b0ff) brightness(1.2) drop-shadow(0 0 15px #ff2e88) brightness(.7) drop-shadow(0 0 135px #ff9800) brightness(2);
+    filter: var(--control-focus);
     transform-origin: 50% 50%;
   }
-  .btn-controls button[name="toggle"].-active.-mining::after {
+  .js-toolbar .btn-controls button[name="toggle"].-active.-mining::after {
     animation-play-state: running;
   }
-  .btn-controls button[name="toggle"].-active:focus::after {
+  .js-toolbar .btn-controls button[name="toggle"].-active:focus::after {
     content: " " url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%20width='24'%20height='24'%20fill='fuchsia'%20stroke='lime'%20stroke-linecap='round'%20stroke-linejoin='round'%20stroke-width='2'%3E%20%20%20%20%20%3Cpath%20d='M18%2013%20L26%202%208%2013%2014%2019%206%2030%2024%2019%20Z'%20/%3E%20%3C/svg%3E");
     filter: drop-shadow(0 0 3px #00b0ff) brightness(1.2) drop-shadow(0 0 15px #ff2e88) brightness(.7) drop-shadow(0 0 135px #ff9800) brightness(2);
+  }
+
+  .js-toolbar input[type="range"][orient="vertical"] {
+    cursor: pointer;
+    -webkit-appearance: none;
+    height: 2px;
+    background: transparent;
+    position: fixed;
+    right: -30px;
+    bottom: 135px;
+    background-image: linear-gradient(90deg, aliceblue, fuchsia 40%, red);
+    transform: rotate(270deg); /* until orient support */
+    outline: unset;
+    border-radius: 5px;
+  }
+  .js-toolbar input[type="range"][orient="vertical"]:focus {
+    filter: drop-shadow(0 0 3px #00b0ff) brightness(1.2) drop-shadow(0 0 15px #ff2e88) brightness(.7) drop-shadow(0 0 135px #00b0ff) brightness(2);
+  }
+  .js-toolbar input[type=range][orient=vertical]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 9px;
+    height: 9px;
+    background-color: lime;
+    border-radius: 2px;
   }
 </style>
