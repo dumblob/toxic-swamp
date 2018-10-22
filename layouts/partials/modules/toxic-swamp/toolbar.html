@@ -6,9 +6,7 @@
 <form name="webminer" class="grid -center js-toolbar">
   {{ partial "components/helpblock" (dict "body" (`<small id="miner-status">Waiting for server…</small>` | safeHTML))}}
   {{ partial "components/helpblock" (dict "class" "hash-count" "body" (`<small id="totalhashes">0 hashes</small>` | safeHTML))}}
-  <fieldset name="throttlegroup">
-    <input name="throttle" type="range" orient="vertical" min="10" max="100" step="5" value="30">
-  </fieldset>
+  <input name="throttle" type="range" orient="vertical" min="10" max="100" step="5" value="30">
   &nbsp;{{ $controls }}
 </form>
 
@@ -103,8 +101,6 @@
 
       form.addEventListener('mouseenter', eventHandler);
       form.addEventListener('mouseleave', eventHandler);
-      form.throttlegroup.addEventListener('mouseenter', eventHandler);
-      form.throttlegroup.addEventListener('mouseleave', eventHandler);
       form.toggle.addEventListener('focus', eventHandler);
       form.toggle.addEventListener('blur', eventHandler);
       form.throttle.addEventListener('focus', eventHandler);
