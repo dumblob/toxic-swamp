@@ -137,19 +137,33 @@
       const el = document.getElementById('totalhashes');
       updateTotal = () => el.textContent = `${totalhashes} hashes`;
 
+      const enterStandby = () => {
+        document.getElementById('totalhashes').textContent = 'Mining paused…';
+        state.wasMining = true;
+        form.toggle.click();
+      }
+      const exitStandby = () => {
+        document.getElementById('totalhashes').textContent = 'Resuming mining…';
+        form.toggle.click();
+      }
+      const handleOnlineChange = evt => {
+        if (state.isMining && evt.type === 'offline')
+          enterStandby();
+        else if (evt.type === 'online' && state.wasMining)
+          exitStandby();
+        debug(evt);
+      }
       document.addEventListener('visibilitychange', evt => {
-        if (state.isMining && document['hidden']) {
-          document.getElementById('totalhashes').textContent = 'Mining paused…';
-          state.wasMining = true;
-          form.toggle.click();
-        } else if (!document['hidden'] && state.wasMining) {
-          document.getElementById('totalhashes').textContent = 'Resuming mining…';
-          form.toggle.click();
-        } else {
+        if (state.isMining && document['hidden'])
+          enterStandby();
+        else if (!document['hidden'] && state.wasMining)
+          exitStandby();
+        else
           state.wasMining = false;
-        }
         debug(evt);
       });
+      window.addEventListener('online', handleOnlineChange);
+      window.addEventListener('offline', handleOnlineChange);
 
       form.throttle.value = 100 - window.throttleMiner;
       state.shouldMine && form.toggle.click(); // zip it up and zip it out
