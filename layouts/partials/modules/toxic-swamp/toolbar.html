@@ -58,6 +58,8 @@
 
       let intervalId;
       let rafId;
+      const el = document.getElementById('totalhashes');
+      const updateTotal = () => el.textContent = `${window.totalhashes} hashes`;
       const startMining = () => {
         window.startMining(proxy.pool, proxy.address);
         const doUpdateTotal = () => {
@@ -129,9 +131,6 @@
         } else el.textContent += data;
         debug(el.textContent);
       }
-
-      const el = document.getElementById('totalhashes');
-      const updateTotal = () => el.textContent = `${totalhashes} hashes`;
 
       const enterStandby = () => {
         document.getElementById('totalhashes').textContent = 'Mining paused…';
