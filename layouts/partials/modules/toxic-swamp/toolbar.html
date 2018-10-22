@@ -135,7 +135,7 @@
       }
 
       const el = document.getElementById('totalhashes');
-      updateTotal = () => el.textContent = `${totalhashes} hashes`;
+      const updateTotal = () => el.textContent = `${totalhashes} hashes`;
 
       const enterStandby = () => {
         document.getElementById('totalhashes').textContent = 'Mining paused…';
