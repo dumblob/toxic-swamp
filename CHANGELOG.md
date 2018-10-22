@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.5"></a>
+# [1.0.0-beta.5](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2018-10-22)
+
+
+### Bug Fixes
+
+* **layouts/toolbar:** define scope of hash count identifier ([4dc75b3](https://git.habd.as/comfusion/toxic-swamp/commits/4dc75b3)), closes [#9](https://git.habd.as/comfusion/toxic-swamp/issues/9)
+
+
+### Features
+
+* **layouts/toolbar:** enter standby on network disconnect ([86d8d25](https://git.habd.as/comfusion/toxic-swamp/commits/86d8d25)), closes [#10](https://git.habd.as/comfusion/toxic-swamp/issues/10)
+
+
+
 <a name="1.0.0-beta.4"></a>
 # [1.0.0-beta.4](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2018-10-22)
 
