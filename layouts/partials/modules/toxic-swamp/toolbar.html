@@ -6,7 +6,7 @@
 <form name="webminer" class="grid -center js-toolbar">
   {{ partial "components/helpblock" (dict "body" (`<small id="miner-status">Waiting for server…</small>` | safeHTML))}}
   {{ partial "components/helpblock" (dict "class" "hash-count" "body" (`<small id="totalhashes">0 hashes</small>` | safeHTML))}}
-  <input name="throttle" type="range" orient="vertical" min="10" max="100" step="5" value="30">
+  <input name="throttle" type="range" min="10" max="100" step="5" value="30">
   &nbsp;{{ $controls }}
 </form>
 
