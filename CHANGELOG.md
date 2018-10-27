@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.6"></a>
+# [1.0.0-beta.6](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2018-10-27)
+
+
+### Bug Fixes
+
+* **layouts/toolbar:** make throttle visible in firefox ([df9eb16](https://git.habd.as/comfusion/toxic-swamp/commits/df9eb16)), closes [#12](https://git.habd.as/comfusion/toxic-swamp/issues/12)
+
+
+### Features
+
+* **layouts/toolbar:** display current hashrate ([48988bb](https://git.habd.as/comfusion/toxic-swamp/commits/48988bb)), closes [#4](https://git.habd.as/comfusion/toxic-swamp/issues/4)
+
+
+
 <a name="1.0.0-beta.5"></a>
 # [1.0.0-beta.5](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2018-10-22)
 
