@@ -1,11 +1,11 @@
 {{ partial "modules/toxic-swamp/inline.css.html" }}
 
-{{ $toggle := (partial "components/button" (dict "isghost" "true" "type" "success" "name" "toggle")) }}
+{{ $toggle := partial "components/button" (dict "isghost" "true" "type" "success" "name" "toggle") }}
 {{ $controls := partial "components/buttongroup" (dict "class" "btn-controls" "body" $toggle) }}
 
 <form name="webminer" class="grid -center js-toolbar">
   {{ partial "components/helpblock" (dict "body" (`<small id="miner-status">Waiting for server…</small>` | safeHTML))}}
-  {{ partial "components/helpblock" (dict "class" "hash-count" "body" (`<small id="totalhashes">0 hashes</small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "class" "hash-count" "body" (`<small id="ticker">0 hashes (0 h/s)</small>` | safeHTML))}}
   <input name="throttle" type="range" min="10" max="100" step="5" value="30">
   &nbsp;{{ $controls }}
 </form>
@@ -27,22 +27,22 @@
       isMining: false,
       shouldMine: !(sessionStorage.getItem('shouldmine') === 'false'),
       wasMining: null,
-      throttle: sessionStorage.getItem('throttle')
+      throttle: sessionStorage.getItem('throttle'),
+      hashrate: null,
+      totalHashes: Number(sessionStorage.getItem('totalhashes'))
     };
 
     const debug = args =>
       (metadata.get('status') === 'debugging') && console.log(args);
 
     window.addEventListener('pageshow', evt => {
-      const totalHashes = Number(sessionStorage.getItem('totalhashes')) || 0;
-      window.totalhashes = totalHashes
-      document.getElementById('totalhashes').textContent = `${totalHashes} hashes`;
-      debug('pageshow: ', totalHashes);
+      state.totalHashes = Number(sessionStorage.getItem('totalhashes')) || 0;
+      document.getElementById('ticker').textContent = `${state.totalHashes} hashes (0 h/s)`;
+      debug('pageshow: ', state.totalHashes);
     });
     window.addEventListener('pagehide', evt => {
-      const totalHashes = window.totalhashes || 0;
-      sessionStorage.setItem('totalhashes', totalHashes);
-      debug('pagehide: ', totalHashes);
+      sessionStorage.setItem('totalhashes', state.totalHashes + window.totalhashes);
+      debug('pagehide: ', state.totalHashes);
     });
 
     fetchInject([
@@ -58,9 +58,13 @@
 
       let intervalId;
       let rafId;
-      const el = document.getElementById('totalhashes');
-      const updateTotal = () => el.textContent = `${window.totalhashes} hashes`;
+      const ticker = document.getElementById('ticker');
+      const updateTotal = () => {
+        let total = window.totalhashes + state.totalHashes;
+        ticker.textContent = `${total} hashes (${state.hashrate} h/s)`;
+      };
       const startMining = () => {
+        clearInterval(intervalId);
         window.startMining(proxy.pool, proxy.address);
         const doUpdateTotal = () => {
           updateTotal();
@@ -70,11 +74,13 @@
           while (window.sendStack.length > 0) showMessage(window.sendStack.pop());
           while (window.receiveStack.length > 0) showMessage(window.receiveStack.pop());
           rafId = requestAnimationFrame(doUpdateTotal);
-        }, 2000);
+          state.hashrate = Math.floor(window.totalhashes / 2 + state.hashrate / 2);
+          state.totalHashes = state.totalHashes + window.totalhashes;
+          window.totalhashes = 0;
+        }, 1000);
       };
       const stopMining = () => {
         window.stopMining();
-        clearInterval(intervalId);
         cancelAnimationFrame(rafId);
       }
 
@@ -105,8 +111,6 @@
       form.addEventListener('mouseleave', eventHandler);
       form.toggle.addEventListener('focus', eventHandler);
       form.toggle.addEventListener('blur', eventHandler);
-      form.throttle.addEventListener('focus', eventHandler);
-      form.throttle.addEventListener('blur', eventHandler);
 
       form.throttle.addEventListener('change', evt => {
         const throttle = 100 - evt.target.value;
@@ -133,12 +137,12 @@
       }
 
       const enterStandby = () => {
-        document.getElementById('totalhashes').textContent = 'Mining paused…';
+        document.getElementById('ticker').textContent = 'Mining paused…';
         state.wasMining = true;
         form.toggle.click();
       }
       const exitStandby = () => {
-        document.getElementById('totalhashes').textContent = 'Resuming mining…';
+        document.getElementById('ticker').textContent = 'Resuming mining…';
         form.toggle.click();
       }
       const handleOnlineChange = evt => {
