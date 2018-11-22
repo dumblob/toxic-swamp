@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.7"></a>
+# [1.0.0-beta.7](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.6...v1.0.0-beta.7) (2018-11-22)
+
+
+### Features
+
+* **data/proxies:** use fire swamp by default ([b259ef4](https://git.habd.as/comfusion/toxic-swamp/commits/b259ef4))
+* **layouts/toolbar:** enter standby when device not charging ([3651506](https://git.habd.as/comfusion/toxic-swamp/commits/3651506))
+
+
+
 <a name="1.0.0-beta.6"></a>
 # [1.0.0-beta.6](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2018-10-27)
 
