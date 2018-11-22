@@ -164,8 +164,22 @@
       window.addEventListener('online', handleOnlineChange);
       window.addEventListener('offline', handleOnlineChange);
 
+      const handleChargingChange = evt => {
+        if (state.isMining && !evt.target.charging)
+          enterStandby();
+        else if (evt.target.charging && state.wasMining)
+          exitStandby();
+        debug(evt);
+      }
+      window.navigator.getBattery().then(battery => {
+        battery.onchargingchange = handleChargingChange;
+      });
+
       form.throttle.value = 100 - window.throttleMiner;
-      state.shouldMine && form.toggle.click(); // zip it up and zip it out
+      window.navigator.getBattery().then(battery => {
+        if (battery.charging)
+          state.shouldMine && form.toggle.click();
+      }); // zip it up and zip it out
     });
   })(window, document);
 </script>
