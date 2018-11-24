@@ -12,6 +12,8 @@
 
 <script>
   (function (window, document, undefiend) {
+    if (window.frameElement) return;
+
     const nodeList = document.head.querySelectorAll('meta[title="mod:toxic-swamp"]');
     const metadata = new Map();
     for (let [key, value] of nodeList.entries()) {
