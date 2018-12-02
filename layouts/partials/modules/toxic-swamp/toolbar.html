@@ -179,7 +179,7 @@
 
       form.throttle.value = 100 - window.throttleMiner;
       window.navigator.getBattery().then(battery => {
-        if (battery.charging)
+        if (battery.charging && navigator.onLine)
           state.shouldMine && form.toggle.click();
       }); // zip it up and zip it out
     });
