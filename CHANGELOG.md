@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.8"></a>
+# [1.0.0-beta.8](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.7...v1.0.0-beta.8) (2018-12-02)
+
+
+### Features
+
+* **layouts/toolbar:** abort miner init when offline ([93218a2](https://git.habd.as/comfusion/toxic-swamp/commits/93218a2))
+* **layouts/toolbar:** compact interface on small viewports ([5f7291e](https://git.habd.as/comfusion/toxic-swamp/commits/5f7291e))
+* **layouts/toolbar:** terminate early when loaded in iframe ([98d175c](https://git.habd.as/comfusion/toxic-swamp/commits/98d175c))
+
+
+
 <a name="1.0.0-beta.7"></a>
 # [1.0.0-beta.7](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.6...v1.0.0-beta.7) (2018-11-22)
 
