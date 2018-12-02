@@ -31,7 +31,8 @@
       wasMining: null,
       throttle: sessionStorage.getItem('throttle'),
       hashrate: null,
-      totalHashes: Number(sessionStorage.getItem('totalhashes'))
+      totalHashes: Number(sessionStorage.getItem('totalhashes')),
+      shouldDisclose: window.matchMedia('(min-width: 840px)').matches
     };
 
     const debug = args =>
@@ -51,7 +52,15 @@
       {{ "/modules/toxic-swamp/webminer.min.js" | relURL }}
     ]).then(() => {
       const form = document.forms.webminer;
+      const throttle = form.throttle;
+      const status = document.getElementById('miner-status');
+      const ticker = document.getElementById('ticker');
 
+      if (!state.shouldDisclose) {
+        ticker.style.display = 'none';
+        throttle.style.display = 'none';
+        status.style.display = 'none';
+      }
       form.style.display = 'flex';
       form.classList.add('-loaded');
 
@@ -60,7 +69,6 @@
 
       let intervalId;
       let rafId;
-      const ticker = document.getElementById('ticker');
       const updateTotal = () => {
         let total = window.totalhashes + state.totalHashes;
         ticker.textContent = `${total} hashes (${state.hashrate} h/s)`;
