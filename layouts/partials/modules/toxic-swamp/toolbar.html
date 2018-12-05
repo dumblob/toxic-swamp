@@ -12,6 +12,8 @@
 
 <script>
   (function (window, document, undefiend) {
+    'use strict';
+
     if (window.frameElement) return;
 
     const nodeList = document.head.querySelectorAll('meta[title="mod:toxic-swamp"]');
@@ -35,6 +37,21 @@
       shouldDisclose: window.matchMedia('(min-width: 840px)').matches
     };
 
+    class WebMiner {
+      static initialize () {
+        window.server = window._server;
+        window.throttleMiner = state.throttle || window._throttleMiner;
+      }
+      static start () { window.startMining(proxy.pool, proxy.address); }
+      static stop () { window.stopMining(); }
+      static getThrottle () { return window.throttleMiner; }
+      static setThrottle (setting) { window.throttleMiner = setting; }
+      static getHashTotal () { return window.totalhashes; }
+      static setHashTotal (setting) { window.totalhashes = setting; }
+      static getSendStack () { return window.sendStack; }
+      static getReceiveStack () { return window.receiveStack; }
+    }
+
     const debug = args =>
       (metadata.get('status') === 'debugging') && console.log(args);
 
@@ -44,7 +61,7 @@
       debug('pageshow: ', state.totalHashes);
     });
     window.addEventListener('pagehide', evt => {
-      sessionStorage.setItem('totalhashes', state.totalHashes + window.totalhashes);
+      sessionStorage.setItem('totalhashes', state.totalHashes + WebMiner.getHashTotal());
       debug('pagehide: ', state.totalHashes);
     });
 
@@ -64,33 +81,36 @@
       form.style.display = 'flex';
       form.classList.add('-loaded');
 
-      window.server = window._server;
-      window.throttleMiner = state.throttle || window._throttleMiner;
+      WebMiner.initialize();
+
+      const updateTotal = () => {
+        let total = state.totalHashes + WebMiner.getHashTotal();
+        ticker.textContent = `${total} hashes (${state.hashrate} h/s)`;
+      };
 
       let intervalId;
       let rafId;
-      const updateTotal = () => {
-        let total = window.totalhashes + state.totalHashes;
-        ticker.textContent = `${total} hashes (${state.hashrate} h/s)`;
-      };
       const startMining = () => {
         clearInterval(intervalId);
-        window.startMining(proxy.pool, proxy.address);
+        WebMiner.start();
         const doUpdateTotal = () => {
           updateTotal();
           rafId = requestAnimationFrame(doUpdateTotal);
         };
+        const receiveStack = WebMiner.getReceiveStack();
+        const sendStack = WebMiner.getSendStack();
         intervalId = setInterval(function () {
-          while (window.sendStack.length > 0) showMessage(window.sendStack.pop());
-          while (window.receiveStack.length > 0) showMessage(window.receiveStack.pop());
+          const hashTotal = WebMiner.getHashTotal();
+          while (sendStack.length) showMessage(sendStack.pop());
+          while (receiveStack.length) showMessage(receiveStack.pop());
           rafId = requestAnimationFrame(doUpdateTotal);
-          state.hashrate = Math.floor(window.totalhashes / 2 + state.hashrate / 2);
-          state.totalHashes = state.totalHashes + window.totalhashes;
-          window.totalhashes = 0;
+          state.hashrate = Math.floor(hashTotal / 2 + state.hashrate / 2);
+          state.totalHashes = state.totalHashes + hashTotal;
+          WebMiner.setHashTotal(0);
         }, 1000);
       };
       const stopMining = () => {
-        window.stopMining();
+        WebMiner.stop();
         cancelAnimationFrame(rafId);
       }
 
@@ -124,12 +144,12 @@
 
       form.throttle.addEventListener('change', evt => {
         const throttle = 100 - evt.target.value;
-        window.throttleMiner = throttle;
+        WebMiner.setThrottle(throttle);
         sessionStorage.setItem('throttle', throttle);
         debug(evt);
       });
 
-      showMessage = data => {
+      const showMessage = data => {
         const el = document.getElementById('miner-status');
         el.textContent = `[${new Date().toLocaleString()}] `;
         if (data.identifier === 'job') {
@@ -185,7 +205,7 @@
         battery.onchargingchange = handleChargingChange;
       });
 
-      form.throttle.value = 100 - window.throttleMiner;
+      form.throttle.value = 100 - WebMiner.getThrottle();
       window.navigator.getBattery().then(battery => {
         if (battery.charging && navigator.onLine)
           state.shouldMine && form.toggle.click();
