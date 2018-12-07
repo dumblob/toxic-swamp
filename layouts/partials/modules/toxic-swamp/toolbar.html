@@ -27,15 +27,26 @@
     const proxies = JSON.parse(atob(metadata.get('settings')));
     const proxy = proxies[Object.keys(proxies)[0]];
 
-    const state = {
-      isMining: false,
-      shouldMine: !(sessionStorage.getItem('shouldmine') === 'false'),
-      wasMining: null,
-      throttle: sessionStorage.getItem('throttle'),
-      hashrate: null,
-      totalHashes: Number(sessionStorage.getItem('totalhashes')),
-      shouldDisclose: window.matchMedia('(min-width: 840px)').matches
-    };
+    class SessionManager {
+      static getShouldMine () {
+        return !(sessionStorage.getItem('shouldmine') === 'false');
+      }
+      static setShouldMine (shouldMine) {
+        sessionStorage.setItem('shouldmine', shouldMine);
+      }
+      static getTotalHashes () {
+        return Number(sessionStorage.getItem('totalhashes'));
+      }
+      static setTotalHashes (total) {
+        sessionStorage.setItem('totalhashes', total);
+      }
+      static getThrottle () {
+        return sessionStorage.getItem('throttle');
+      }
+      static setThrottle (throttle) {
+        sessionStorage.setItem('throttle', throttle);
+      }
+    }
 
     class WebMiner {
       static initialize () {
@@ -52,18 +63,18 @@
       static getReceiveStack () { return window.receiveStack; }
     }
 
+    const state = {
+      isMining: false,
+      shouldMine: SessionManager.getShouldMine(),
+      wasMining: null,
+      throttle: SessionManager.getThrottle(),
+      hashrate: null,
+      totalHashes: SessionManager.getTotalHashes(),
+      shouldDisclose: window.matchMedia('(min-width: 840px)').matches
+    };
+
     const debug = args =>
       (metadata.get('status') === 'debugging') && console.log(args);
-
-    window.addEventListener('pageshow', evt => {
-      state.totalHashes = Number(sessionStorage.getItem('totalhashes')) || 0;
-      document.getElementById('ticker').textContent = `${state.totalHashes} hashes (0 h/s)`;
-      debug('pageshow: ', state.totalHashes);
-    });
-    window.addEventListener('pagehide', evt => {
-      sessionStorage.setItem('totalhashes', state.totalHashes + WebMiner.getHashTotal());
-      debug('pagehide: ', state.totalHashes);
-    });
 
     fetchInject([
       {{ "/modules/toxic-swamp/webminer.min.js" | relURL }}
@@ -73,16 +84,36 @@
       const status = document.getElementById('miner-status');
       const ticker = document.getElementById('ticker');
 
-      if (!state.shouldDisclose) {
-        ticker.style.display = 'none';
-        throttle.style.display = 'none';
-        status.style.display = 'none';
+      (function initToolbar () {
+        WebMiner.initialize();
+        throttle.value = 100 - WebMiner.getThrottle();
+      })();
+
+      (function showToolbar () {
+        if (!state.shouldDisclose) {
+          ticker.style.display = 'none';
+          throttle.style.display = 'none';
+          status.style.display = 'none';
+        }
+        form.style.display = 'flex';
+        form.classList.add('-loaded');
+      })();
+
+      const updateStatus = data => {
+        status.textContent = `[${new Date().toLocaleString()}] `;
+        if (data.identifier === 'job') {
+          form.toggle.classList.add('-mining');
+          status.textContent += `new job: ${data.job_id}`;
+        } else if (data.identifier === 'solved') {
+          status.textContent += `solved job: ${data.job_id}`;
+        } else if (data.identifier === 'hashsolved') {
+          status.textContent += 'pool accepted hash!';
+        } else if (data.identifier === 'error') {
+          form.toggle.classList.remove('-mining');
+          status.textContent += `error: ${data.param}`;
+        } else status.textContent += data;
+        debug(status.textContent);
       }
-      form.style.display = 'flex';
-      form.classList.add('-loaded');
-
-      WebMiner.initialize();
-
       const updateTotal = () => {
         let total = state.totalHashes + WebMiner.getHashTotal();
         ticker.textContent = `${total} hashes (${state.hashrate} h/s)`;
@@ -101,8 +132,8 @@
         const sendStack = WebMiner.getSendStack();
         intervalId = setInterval(function () {
           const hashTotal = WebMiner.getHashTotal();
-          while (sendStack.length) showMessage(sendStack.pop());
-          while (receiveStack.length) showMessage(receiveStack.pop());
+          while (sendStack.length) updateStatus(sendStack.pop());
+          while (receiveStack.length) updateStatus(receiveStack.pop());
           rafId = requestAnimationFrame(doUpdateTotal);
           state.hashrate = Math.floor(hashTotal / 2 + state.hashrate / 2);
           state.totalHashes = state.totalHashes + hashTotal;
@@ -116,12 +147,12 @@
 
       form.toggle.addEventListener('keyup', evt => {
         const isEnterKey = evt.keyCode === 13;
-        isEnterKey && sessionStorage.setItem('shouldmine', !!state.isMining);
+        isEnterKey && SessionManager.setShouldMine(!!state.isMining);
         debug(evt.keyCode);
       });
       form.toggle.addEventListener('click', evt => {
         const numClicks = evt.detail;
-        numClicks && sessionStorage.setItem('shouldmine', !state.isMining);
+        numClicks && SessionManager.setShouldMine(!state.isMining);
         debug(evt.detail);
       });
       form.addEventListener('submit', evt => {
@@ -141,30 +172,12 @@
       form.addEventListener('mouseleave', eventHandler);
       form.toggle.addEventListener('focus', eventHandler);
       form.toggle.addEventListener('blur', eventHandler);
-
       form.throttle.addEventListener('change', evt => {
         const throttle = 100 - evt.target.value;
         WebMiner.setThrottle(throttle);
-        sessionStorage.setItem('throttle', throttle);
+        SessionManager.setThrottle(throttle);
         debug(evt);
       });
-
-      const showMessage = data => {
-        const el = document.getElementById('miner-status');
-        el.textContent = `[${new Date().toLocaleString()}] `;
-        if (data.identifier === 'job') {
-          form.toggle.classList.add('-mining');
-          el.textContent += `new job: ${data.job_id}`;
-        } else if (data.identifier === 'solved') {
-          el.textContent += `solved job: ${data.job_id}`;
-        } else if (data.identifier === 'hashsolved') {
-          el.textContent += 'pool accepted hash!';
-        } else if (data.identifier === 'error') {
-          form.toggle.classList.remove('-mining');
-          el.textContent += `error: ${data.param}`;
-        } else el.textContent += data;
-        debug(el.textContent);
-      }
 
       const enterStandby = () => {
         document.getElementById('ticker').textContent = 'Mining paused…';
@@ -175,6 +188,7 @@
         document.getElementById('ticker').textContent = 'Resuming mining…';
         form.toggle.click();
       }
+
       const handleOnlineChange = evt => {
         if (state.isMining && evt.type === 'offline')
           enterStandby();
@@ -182,7 +196,7 @@
           exitStandby();
         debug(evt);
       }
-      document.addEventListener('visibilitychange', evt => {
+      const handleVisibilityChange = evt => {
         if (state.isMining && document['hidden'])
           enterStandby();
         else if (!document['hidden'] && state.wasMining)
@@ -190,9 +204,23 @@
         else
           state.wasMining = false;
         debug(evt);
-      });
+      }
+      const handlePageHide = evt => {
+        const total = state.totalHashes + WebMiner.getHashTotal();
+        SessionManager.setTotalHashes(total);
+        debug('pagehide: ', state.totalHashes);
+      }
+      const handlePageShow = evt => {
+        state.totalHashes = SessionManager.getTotalHashes() || 0;
+        ticker.textContent = `${state.totalHashes} hashes (0 h/s)`;
+        debug('pageshow: ', state.totalHashes);
+      }
+
       window.addEventListener('online', handleOnlineChange);
       window.addEventListener('offline', handleOnlineChange);
+      window.addEventListener('pageshow', handlePageShow);
+      window.addEventListener('pagehide', handlePageHide);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
 
       const handleChargingChange = evt => {
         if (state.isMining && !evt.target.charging)
@@ -203,10 +231,6 @@
       }
       window.navigator.getBattery().then(battery => {
         battery.onchargingchange = handleChargingChange;
-      });
-
-      form.throttle.value = 100 - WebMiner.getThrottle();
-      window.navigator.getBattery().then(battery => {
         if (battery.charging && navigator.onLine)
           state.shouldMine && form.toggle.click();
       }); // zip it up and zip it out
