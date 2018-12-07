@@ -86,6 +86,8 @@
 
       (function initToolbar () {
         WebMiner.initialize();
+        const total = SessionManager.getTotalHashes() || 0;
+        ticker.textContent = `${total} hashes (0 h/s)`;
         throttle.value = 100 - WebMiner.getThrottle();
       })();
 
