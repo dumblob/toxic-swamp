@@ -22,6 +22,7 @@
       let kvp = value.content.split(':'); metadata.set(kvp[0],kvp[1]);
     }
     const active = ['enabled', 'debugging'].includes(metadata.get('status'));
+
     if (!(active && metadata.has('settings'))) return;
 
     const proxies = JSON.parse(atob(metadata.get('settings')));
@@ -182,12 +183,12 @@
       });
 
       const enterStandby = () => {
-        document.getElementById('ticker').textContent = 'Mining paused…';
+        ticker.textContent = 'Mining paused…';
         state.wasMining = true;
         form.toggle.click();
       }
       const exitStandby = () => {
-        document.getElementById('ticker').textContent = 'Resuming mining…';
+        ticker.textContent = 'Resuming mining…';
         form.toggle.click();
       }
 
