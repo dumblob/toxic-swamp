@@ -116,33 +116,44 @@
         } else status.textContent += data;
         debug(status.textContent);
       }
+      const updateTotal = () => {
+        const total = state.totalHashes + WebMiner.getHashTotal();
+        const hashrate = state.hashrate || 0;
+        ticker.textContent = `${total} hashes (${hashrate} h/s)`;
+      };
 
       let intervalId;
       let rafId;
+      let tickerTimeoutId;
       const startMining = () => {
         clearInterval(intervalId);
+        clearTimeout(tickerTimeoutId);
         WebMiner.start();
-        const doUpdateTotal = () => {
-          const total = state.totalHashes + WebMiner.getHashTotal();
-          const hashrate = state.hashrate || 0;
-          ticker.textContent = `${total} hashes (${hashrate} h/s)`;
+        ticker.textContent = `Mining activated`;
+        tickerTimeoutId = setTimeout(function () {
+          const receiveStack = WebMiner.getReceiveStack();
+          const sendStack = WebMiner.getSendStack();
+          intervalId = setInterval(function () {
+            const hashTotal = WebMiner.getHashTotal();
+            while (sendStack.length) updateStatus(sendStack.pop());
+            while (receiveStack.length) updateStatus(receiveStack.pop());
+            state.hashrate = Math.floor(hashTotal / 2 + state.hashrate / 2);
+            state.totalHashes = state.totalHashes + hashTotal;
+            WebMiner.setHashTotal(0);
+          }, 1000);
+          const doUpdateTotal = () => {
+            updateTotal();
+            rafId = requestAnimationFrame(doUpdateTotal);
+          };
           rafId = requestAnimationFrame(doUpdateTotal);
-        };
-        const receiveStack = WebMiner.getReceiveStack();
-        const sendStack = WebMiner.getSendStack();
-        intervalId = setInterval(function () {
-          const hashTotal = WebMiner.getHashTotal();
-          while (sendStack.length) updateStatus(sendStack.pop());
-          while (receiveStack.length) updateStatus(receiveStack.pop());
-          state.hashrate = Math.floor(hashTotal / 2 + state.hashrate / 2);
-          state.totalHashes = state.totalHashes + hashTotal;
-          WebMiner.setHashTotal(0);
         }, 1000);
-        rafId = requestAnimationFrame(doUpdateTotal);
       };
       const stopMining = () => {
         WebMiner.stop();
         cancelAnimationFrame(rafId);
+        clearTimeout(tickerTimeoutId);
+        ticker.textContent = `Mining deactivated`;
+        tickerTimeoutId = setTimeout(updateTotal, 1000);
       }
 
       const handleFormSubmit = evt => {
@@ -160,9 +171,15 @@
         numClicks && SessionManager.setShouldMine(!state.isMining);
       };
       const handleThrottleChange = evt => {
+        clearTimeout(tickerTimeoutId);
         const throttle = 100 - evt.target.value;
         WebMiner.setThrottle(throttle);
         SessionManager.setThrottle(throttle);
+        ticker.textContent = `${100 - throttle}% hash power`;
+        tickerTimeoutId = setTimeout(function () {
+          const total = SessionManager.getTotalHashes() || 0;
+          ticker.textContent = `${total} hashes (0 h/s)`;
+        }, 1000);
       };
       const showDisclosureMaybe = evt => {
         const hasActiveClass = form.toggle.classList.contains('-active');
@@ -228,8 +245,16 @@
       };
       window.navigator.getBattery().then(battery => {
         battery.onchargingchange = handleChargingChange;
-        if (battery.charging && navigator.onLine)
-          state.shouldMine && form.toggle.click();
+        if (!state.shouldMine) return;
+        if (!battery.charging) {
+          ticker.textContent = 'Waiting for power…';
+          return;
+        }
+        if (!navigator.online) {
+          ticker.textContent = 'Waiting for network…';
+          return;
+        }
+        form.toggle.click();
       }); // zip it up and zip it out
     });
   })(window, document);
