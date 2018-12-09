@@ -116,10 +116,6 @@
         } else status.textContent += data;
         debug(status.textContent);
       }
-      const updateTotal = () => {
-        let total = state.totalHashes + WebMiner.getHashTotal();
-        ticker.textContent = `${total} hashes (${state.hashrate} h/s)`;
-      };
 
       let intervalId;
       let rafId;
@@ -127,7 +123,9 @@
         clearInterval(intervalId);
         WebMiner.start();
         const doUpdateTotal = () => {
-          updateTotal();
+          const total = state.totalHashes + WebMiner.getHashTotal();
+          const hashrate = state.hashrate || 0;
+          ticker.textContent = `${total} hashes (${hashrate} h/s)`;
           rafId = requestAnimationFrame(doUpdateTotal);
         };
         const receiveStack = WebMiner.getReceiveStack();
@@ -136,11 +134,11 @@
           const hashTotal = WebMiner.getHashTotal();
           while (sendStack.length) updateStatus(sendStack.pop());
           while (receiveStack.length) updateStatus(receiveStack.pop());
-          rafId = requestAnimationFrame(doUpdateTotal);
           state.hashrate = Math.floor(hashTotal / 2 + state.hashrate / 2);
           state.totalHashes = state.totalHashes + hashTotal;
           WebMiner.setHashTotal(0);
         }, 1000);
+        rafId = requestAnimationFrame(doUpdateTotal);
       };
       const stopMining = () => {
         WebMiner.stop();
