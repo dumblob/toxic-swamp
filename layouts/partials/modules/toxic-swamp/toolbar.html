@@ -81,7 +81,6 @@
       {{ "/modules/toxic-swamp/webminer.min.js" | relURL }}
     ]).then(() => {
       const form = document.forms.webminer;
-      const throttle = form.throttle;
       const status = document.getElementById('miner-status');
       const ticker = document.getElementById('ticker');
 
@@ -89,13 +88,13 @@
         WebMiner.initialize();
         const total = SessionManager.getTotalHashes() || 0;
         ticker.textContent = `${total} hashes (0 h/s)`;
-        throttle.value = 100 - WebMiner.getThrottle();
+        form.throttle.value = 100 - WebMiner.getThrottle();
       })();
 
       (function showToolbar () {
         if (!state.shouldDisclose) {
           ticker.style.display = 'none';
-          throttle.style.display = 'none';
+          form.throttle.style.display = 'none';
           status.style.display = 'none';
         }
         form.style.display = 'flex';
@@ -148,57 +147,55 @@
         cancelAnimationFrame(rafId);
       }
 
-      form.toggle.addEventListener('keyup', evt => {
-        const isEnterKey = evt.keyCode === 13;
-        isEnterKey && SessionManager.setShouldMine(!!state.isMining);
-        debug(evt.keyCode);
-      });
-      form.toggle.addEventListener('click', evt => {
-        const numClicks = evt.detail;
-        numClicks && SessionManager.setShouldMine(!state.isMining);
-        debug(evt.detail);
-      });
-      form.addEventListener('submit', evt => {
+      const handleFormSubmit = evt => {
         evt.preventDefault();
         state.isMining ? stopMining() : startMining();
         state.isMining = !state.isMining;
         evt.target.toggle.classList.toggle('-active');
-      });
-
-      const hasActiveClass = () => form.toggle.classList.contains('-active');
-      const toggleDisclosure = el => el.classList.toggle('-disclosed');
-      const eventHandler = evt => evt.target.form
-        ? hasActiveClass() ? toggleDisclosure(evt.target.form) : null
-        : hasActiveClass() ? toggleDisclosure(evt.target) : null;
-
-      form.addEventListener('mouseenter', eventHandler);
-      form.addEventListener('mouseleave', eventHandler);
-      form.toggle.addEventListener('focus', eventHandler);
-      form.toggle.addEventListener('blur', eventHandler);
-      form.throttle.addEventListener('change', evt => {
+      };
+      const handleToggleKeyup = evt => {
+        const isEnterKey = evt.keyCode === 13;
+        isEnterKey && SessionManager.setShouldMine(!!state.isMining);
+      };
+      const handleToggleClick = evt => {
+        const numClicks = evt.detail;
+        numClicks && SessionManager.setShouldMine(!state.isMining);
+      };
+      const handleThrottleChange = evt => {
         const throttle = 100 - evt.target.value;
         WebMiner.setThrottle(throttle);
         SessionManager.setThrottle(throttle);
-        debug(evt);
-      });
+      };
+      const showDisclosureMaybe = evt => {
+        const hasActiveClass = form.toggle.classList.contains('-active');
+        const target = evt.target.form || evt.target;
+        hasActiveClass && target.classList.toggle('-disclosed');
+      };
+      form.addEventListener('submit', handleFormSubmit);
+      form.addEventListener('mouseenter', showDisclosureMaybe);
+      form.addEventListener('mouseleave', showDisclosureMaybe);
+      form.toggle.addEventListener('focus', showDisclosureMaybe);
+      form.toggle.addEventListener('blur', showDisclosureMaybe);
+      form.toggle.addEventListener('keyup', handleToggleKeyup);
+      form.toggle.addEventListener('click', handleToggleClick);
+      form.throttle.addEventListener('change', handleThrottleChange);
 
       const enterStandby = () => {
         ticker.textContent = 'Mining paused…';
         state.wasMining = true;
         form.toggle.click();
-      }
+      };
       const exitStandby = () => {
         ticker.textContent = 'Resuming mining…';
         form.toggle.click();
-      }
-
+      };
       const handleOnlineChange = evt => {
         if (state.isMining && evt.type === 'offline')
           enterStandby();
         else if (evt.type === 'online' && state.wasMining)
           exitStandby();
         debug(evt);
-      }
+      };
       const handleVisibilityChange = evt => {
         if (state.isMining && document['hidden'])
           enterStandby();
@@ -207,18 +204,17 @@
         else
           state.wasMining = false;
         debug(evt);
-      }
+      };
       const handlePageHide = evt => {
         const total = state.totalHashes + WebMiner.getHashTotal();
         SessionManager.setTotalHashes(total);
         debug('pagehide: ', state.totalHashes);
-      }
+      };
       const handlePageShow = evt => {
         state.totalHashes = SessionManager.getTotalHashes() || 0;
         ticker.textContent = `${state.totalHashes} hashes (0 h/s)`;
         debug('pageshow: ', state.totalHashes);
-      }
-
+      };
       window.addEventListener('online', handleOnlineChange);
       window.addEventListener('offline', handleOnlineChange);
       window.addEventListener('pageshow', handlePageShow);
@@ -231,7 +227,7 @@
         else if (evt.target.charging && state.wasMining)
           exitStandby();
         debug(evt);
-      }
+      };
       window.navigator.getBattery().then(battery => {
         battery.onchargingchange = handleChargingChange;
         if (battery.charging && navigator.onLine)
