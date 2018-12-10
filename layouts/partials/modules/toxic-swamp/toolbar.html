@@ -4,8 +4,8 @@
 {{ $controls := partial "components/buttongroup" (dict "class" "btn-controls" "body" $toggle) }}
 
 <form name="webminer" class="grid -center js-toolbar">
-  {{ partial "components/helpblock" (dict "body" (`<small id="miner-status">Waiting for server…</small>` | safeHTML))}}
-  {{ partial "components/helpblock" (dict "class" "hash-count" "body" (`<small id="ticker">0 hashes (0 h/s)</small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "class" "status" "body" (`<small id="js-status">Waiting for server…</small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "class" "ticker" "body" (`<small id="js-ticker">0 hashes (0 h/s)</small>` | safeHTML))}}
   <input name="throttle" type="range" min="10" max="100" step="5" value="30">
   &nbsp;{{ $controls }}
 </form>
@@ -81,8 +81,10 @@
       {{ "/modules/toxic-swamp/webminer.min.js" | relURL }}
     ]).then(() => {
       const form = document.forms.webminer;
-      const status = document.getElementById('miner-status');
-      const ticker = document.getElementById('ticker');
+      const status = form.querySelector('#js-status');
+      const ticker = form.querySelector('#js-ticker');
+
+      let tickerTimeoutId;
 
       (function initToolbar () {
         WebMiner.initialize();
@@ -116,6 +118,14 @@
         } else status.textContent += data;
         debug(status.textContent);
       }
+      const updateTicker = message => {
+        const prevTickerText = ticker.textContent;
+        const nextTickerText = message;
+        ticker.textContent = nextTickerText;
+        tickerTimeoutId = setTimeout(function () {
+          ticker.textContent = prevTickerText;
+        }, 2000);
+      }
       const updateTotal = () => {
         const total = state.totalHashes + WebMiner.getHashTotal();
         const hashrate = state.hashrate || 0;
@@ -124,12 +134,10 @@
 
       let intervalId;
       let rafId;
-      let tickerTimeoutId;
       const startMining = () => {
         clearInterval(intervalId);
         clearTimeout(tickerTimeoutId);
         WebMiner.start();
-        ticker.textContent = `Mining activated`;
         tickerTimeoutId = setTimeout(function () {
           const receiveStack = WebMiner.getReceiveStack();
           const sendStack = WebMiner.getSendStack();
@@ -140,11 +148,12 @@
             state.hashrate = Math.floor(hashTotal / 2 + state.hashrate / 2);
             state.totalHashes = state.totalHashes + hashTotal;
             WebMiner.setHashTotal(0);
-          }, 1000);
+          }, 2000);
           const doUpdateTotal = () => {
             updateTotal();
             rafId = requestAnimationFrame(doUpdateTotal);
           };
+          cancelAnimationFrame(rafId);
           rafId = requestAnimationFrame(doUpdateTotal);
         }, 1000);
       };
@@ -152,8 +161,7 @@
         WebMiner.stop();
         cancelAnimationFrame(rafId);
         clearTimeout(tickerTimeoutId);
-        ticker.textContent = `Mining deactivated`;
-        tickerTimeoutId = setTimeout(updateTotal, 1000);
+        updateTicker('Mining deactivated…');
       }
 
       const handleFormSubmit = evt => {
@@ -175,7 +183,7 @@
         const throttle = 100 - evt.target.value;
         WebMiner.setThrottle(throttle);
         SessionManager.setThrottle(throttle);
-        ticker.textContent = `${100 - throttle}% hash power`;
+        ticker.textContent = `${100 - throttle}% hash power…`;
         tickerTimeoutId = setTimeout(function () {
           const total = SessionManager.getTotalHashes() || 0;
           ticker.textContent = `${total} hashes (0 h/s)`;
@@ -195,40 +203,36 @@
       form.toggle.addEventListener('click', handleToggleClick);
       form.throttle.addEventListener('change', handleThrottleChange);
 
-      const enterStandby = () => {
-        ticker.textContent = 'Mining paused…';
+      const enterStandby = (message = 'Standing by…') => {
+        updateTicker(message);
         state.wasMining = true;
-        form.toggle.click();
+        state.isMining && form.toggle.click();
       };
-      const exitStandby = () => {
-        ticker.textContent = 'Resuming mining…';
-        form.toggle.click();
+      const exitStandby = (message = 'Resuming…') => {
+        updateTicker(message);
+        !state.isMining && form.toggle.click();
       };
       const handleOnlineChange = evt => {
         if (state.isMining && evt.type === 'offline')
-          enterStandby();
+          enterStandby('Waiting for network…');
         else if (evt.type === 'online' && state.wasMining)
-          exitStandby();
-        debug(evt);
+          exitStandby('Network restored…');
       };
       const handleVisibilityChange = evt => {
         if (state.isMining && document['hidden'])
-          enterStandby();
+          enterStandby('Waiting for visibility…');
         else if (!document['hidden'] && state.wasMining)
           exitStandby();
         else
           state.wasMining = false;
-        debug(evt);
       };
       const handlePageHide = evt => {
         const total = state.totalHashes + WebMiner.getHashTotal();
         SessionManager.setTotalHashes(total);
-        debug('pagehide: ', state.totalHashes);
       };
       const handlePageShow = evt => {
         state.totalHashes = SessionManager.getTotalHashes() || 0;
         ticker.textContent = `${state.totalHashes} hashes (0 h/s)`;
-        debug('pageshow: ', state.totalHashes);
       };
       window.addEventListener('online', handleOnlineChange);
       window.addEventListener('offline', handleOnlineChange);
@@ -238,20 +242,24 @@
 
       const handleChargingChange = evt => {
         if (state.isMining && !evt.target.charging)
-          enterStandby();
+          enterStandby('Waiting for power…');
         else if (evt.target.charging && state.wasMining)
-          exitStandby();
-        debug(evt);
+          exitStandby('Power restored…');
       };
       window.navigator.getBattery().then(battery => {
         battery.onchargingchange = handleChargingChange;
         if (!state.shouldMine) return;
-        if (!battery.charging) {
-          ticker.textContent = 'Waiting for power…';
+        if (!navigator.onLine) {
+          setTimeout(function () {
+            updateTicker('Waiting for network…')
+          }, 5000);
           return;
         }
-        if (!navigator.online) {
-          ticker.textContent = 'Waiting for network…';
+        if (!battery.charging) {
+          updateTicker('Saving battery…')
+          setTimeout(function () {
+            enterStandby('Click to activate…');
+          }, 5000);
           return;
         }
         form.toggle.click();
