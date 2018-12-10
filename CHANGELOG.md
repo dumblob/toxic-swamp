@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.10"></a>
+# [1.0.0-beta.10](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2018-12-10)
+
+
+### Bug Fixes
+
+* **layouts/toolbar:** align throttle, disclaimer & snackbar ([1a53ebe](https://git.habd.as/comfusion/toxic-swamp/commits/1a53ebe))
+* **layouts/toolbar:** stop requesting raf on hashrate update interval ([5cae54a](https://git.habd.as/comfusion/toxic-swamp/commits/5cae54a))
+
+
+### Features
+
+* **layouts/toolbar:** add detailed toolbar and control state messages ([0c009f7](https://git.habd.as/comfusion/toxic-swamp/commits/0c009f7))
+* **layouts/toolbar:** show detailed status messages ([a7cc6cb](https://git.habd.as/comfusion/toxic-swamp/commits/a7cc6cb))
+
+
+
 <a name="1.0.0-beta.9"></a>
 # [1.0.0-beta.9](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.8...v1.0.0-beta.9) (2018-12-07)
 
