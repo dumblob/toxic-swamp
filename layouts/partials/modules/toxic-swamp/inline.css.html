@@ -64,7 +64,7 @@
   .js-toolbar:not(.-disclosed) button:not(.-active) {
     animation: spin 0.3s 5s 1 linear;
   }
-  .js-toolbar.-disclosed .help-block.ticker {
+  .js-toolbar.-disclosed .help-block:not(.status) {
     animation: revealSlide ease-in both reverse;
   }
   .js-toolbar .help-block.status {
@@ -83,7 +83,7 @@
       margin-right: 3rem;
     }
   }
-  .js-toolbar .help-block.ticker {
+  .js-toolbar .help-block:not(.status) {
     position: absolute;
     bottom: 9px;
     right: 0;

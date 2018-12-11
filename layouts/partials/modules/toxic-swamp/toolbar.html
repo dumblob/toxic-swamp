@@ -5,6 +5,7 @@
 
 <form name="webminer" class="grid -center js-toolbar">
   {{ partial "components/helpblock" (dict "class" "status" "body" (`<small id="js-status">Waiting for server…</small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "class" "interstitial" "body" (`<small id="js-interstitial" hidden>Click to activate…</small>` | safeHTML))}}
   {{ partial "components/helpblock" (dict "class" "ticker" "body" (`<small id="js-ticker">0 hashes (0 h/s)</small>` | safeHTML))}}
   <input name="throttle" type="range" min="10" max="100" step="5" value="30">
   &nbsp;{{ $controls }}
@@ -82,6 +83,7 @@
     ]).then(() => {
       const form = document.forms.webminer;
       const status = form.querySelector('#js-status');
+      const interstitial = form.querySelector('#js-interstitial');
       const ticker = form.querySelector('#js-ticker');
 
       let tickerTimeoutId;
@@ -95,9 +97,9 @@
 
       (function showToolbar () {
         if (!state.shouldDisclose) {
-          ticker.style.display = 'none';
-          form.throttle.style.display = 'none';
-          status.style.display = 'none';
+          ticker.hidden = true;
+          form.throttle.hidden = true;
+          status.hidden = true;
         }
         form.style.display = 'flex';
         form.classList.add('-loaded');
@@ -118,13 +120,14 @@
         } else status.textContent += data;
         debug(status.textContent);
       }
-      const updateTicker = message => {
-        const prevTickerText = ticker.textContent;
-        const nextTickerText = message;
-        ticker.textContent = nextTickerText;
+      const showInterstitial = (message, duration = 2000) => {
+        interstitial.textContent = message;
+        ticker.hidden = true;
+        interstitial.hidden = false;
         tickerTimeoutId = setTimeout(function () {
-          ticker.textContent = prevTickerText;
-        }, 2000);
+          ticker.hidden = false;
+          interstitial.hidden = true;
+        }, duration);
       }
       const updateTotal = () => {
         const total = state.totalHashes + WebMiner.getHashTotal();
@@ -161,7 +164,7 @@
         WebMiner.stop();
         cancelAnimationFrame(rafId);
         clearTimeout(tickerTimeoutId);
-        updateTicker('Mining deactivated…');
+        showInterstitial('Mining deactivated…');
       }
 
       const handleFormSubmit = evt => {
@@ -204,12 +207,12 @@
       form.throttle.addEventListener('change', handleThrottleChange);
 
       const enterStandby = (message = 'Standing by…') => {
-        updateTicker(message);
+        showInterstitial(message);
         state.wasMining = true;
         state.isMining && form.toggle.click();
       };
       const exitStandby = (message = 'Resuming…') => {
-        updateTicker(message);
+        showInterstitial(message);
         !state.isMining && form.toggle.click();
       };
       const handleOnlineChange = evt => {
@@ -251,12 +254,12 @@
         if (!state.shouldMine) return;
         if (!navigator.onLine) {
           setTimeout(function () {
-            updateTicker('Waiting for network…')
+            showInterstitial('Waiting for network…')
           }, 5000);
           return;
         }
         if (!battery.charging) {
-          updateTicker('Saving battery…')
+          showInterstitial('Saving battery…')
           setTimeout(function () {
             enterStandby('Click to activate…');
           }, 5000);
