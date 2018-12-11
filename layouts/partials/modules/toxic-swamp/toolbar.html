@@ -141,6 +141,7 @@
         clearInterval(intervalId);
         clearTimeout(tickerTimeoutId);
         WebMiner.start();
+        showInterstitial('Miner activated…');
         tickerTimeoutId = setTimeout(function () {
           const receiveStack = WebMiner.getReceiveStack();
           const sendStack = WebMiner.getSendStack();
@@ -164,7 +165,7 @@
         WebMiner.stop();
         cancelAnimationFrame(rafId);
         clearTimeout(tickerTimeoutId);
-        showInterstitial('Mining deactivated…');
+        showInterstitial('Miner deactivated…');
       }
 
       const handleFormSubmit = evt => {
