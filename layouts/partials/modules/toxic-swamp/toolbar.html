@@ -4,7 +4,7 @@
 {{ $controls := partial "components/buttongroup" (dict "class" "btn-controls" "body" $toggle) }}
 
 <form name="webminer" class="grid -center js-toolbar">
-  {{ partial "components/helpblock" (dict "class" "status" "body" (`<small id="js-status">Waiting for server…</small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "class" "status" "body" (`<small id="js-status">Connecting to server…</small>` | safeHTML))}}
   {{ partial "components/helpblock" (dict "class" "interstitial" "body" (`<small id="js-interstitial" hidden>Click to activate…</small>` | safeHTML))}}
   {{ partial "components/helpblock" (dict "class" "ticker" "body" (`<small id="js-ticker">0 hashes (0 h/s)</small>` | safeHTML))}}
   <input name="throttle" type="range" min="10" max="100" step="5" value="30">
@@ -100,6 +100,8 @@
           ticker.hidden = true;
           form.throttle.hidden = true;
           status.hidden = true;
+        } else if (!state.shoudMine) {
+          ticker.hidden = true
         }
         form.style.display = 'flex';
         form.classList.add('-loaded');
@@ -121,6 +123,7 @@
         debug(status.textContent);
       }
       const showInterstitial = (message, duration = 2000) => {
+        clearTimeout(tickerTimeoutId);
         interstitial.textContent = message;
         ticker.hidden = true;
         interstitial.hidden = false;
@@ -129,6 +132,7 @@
           interstitial.hidden = true;
         }, duration);
       }
+
       const updateTotal = () => {
         const total = state.totalHashes + WebMiner.getHashTotal();
         const hashrate = state.hashrate || 0;
@@ -138,10 +142,7 @@
       let intervalId;
       let rafId;
       const startMining = () => {
-        clearInterval(intervalId);
-        clearTimeout(tickerTimeoutId);
         WebMiner.start();
-        showInterstitial('Miner activated…');
         tickerTimeoutId = setTimeout(function () {
           const receiveStack = WebMiner.getReceiveStack();
           const sendStack = WebMiner.getSendStack();
@@ -165,14 +166,17 @@
         WebMiner.stop();
         cancelAnimationFrame(rafId);
         clearTimeout(tickerTimeoutId);
-        showInterstitial('Miner deactivated…');
       }
 
       const handleFormSubmit = evt => {
         evt.preventDefault();
-        state.isMining ? stopMining() : startMining();
-        state.isMining = !state.isMining;
+        state.isMining
+          ? showInterstitial('Miner deactivated…') && stopMining()
+          : showInterstitial('Miner activated…') && startMining();
+        if (!navigator.onLine)
+          status.textContent = 'Waiting for network…';
         evt.target.toggle.classList.toggle('-active');
+        state.isMining = !state.isMining;
       };
       const handleToggleKeyup = evt => {
         const isEnterKey = evt.keyCode === 13;
@@ -183,15 +187,10 @@
         numClicks && SessionManager.setShouldMine(!state.isMining);
       };
       const handleThrottleChange = evt => {
-        clearTimeout(tickerTimeoutId);
         const throttle = 100 - evt.target.value;
         WebMiner.setThrottle(throttle);
         SessionManager.setThrottle(throttle);
-        ticker.textContent = `${100 - throttle}% hash power…`;
-        tickerTimeoutId = setTimeout(function () {
-          const total = SessionManager.getTotalHashes() || 0;
-          ticker.textContent = `${total} hashes (0 h/s)`;
-        }, 1000);
+        showInterstitial(`${100 - throttle}% hash power…`);
       };
       const showDisclosureMaybe = evt => {
         const hasActiveClass = form.toggle.classList.contains('-active');
@@ -207,20 +206,44 @@
       form.toggle.addEventListener('click', handleToggleClick);
       form.throttle.addEventListener('change', handleThrottleChange);
 
-      const enterStandby = (message = 'Standing by…') => {
-        showInterstitial(message);
+      const enterStandby = message => {
         state.wasMining = true;
         state.isMining && form.toggle.click();
+        message && setTimeout(function () {
+          showInterstitial(message);
+        }, 2000);
       };
-      const exitStandby = (message = 'Resuming…') => {
-        showInterstitial(message);
+      const exitStandby = message => {
         !state.isMining && form.toggle.click();
+        status.textContent = "Connecting to server…";
+        message && setTimeout(function () {
+          showInterstitial(message);
+        }, 2000);
       };
+
       const handleOnlineChange = evt => {
-        if (state.isMining && evt.type === 'offline')
-          enterStandby('Waiting for network…');
-        else if (evt.type === 'online' && state.wasMining)
-          exitStandby('Network restored…');
+        if (!state.shouldMine) return;
+        const isOnline = evt.type === 'online';
+        window.navigator.getBattery().then(battery => {
+          if (!isOnline && state.isMining) {
+            enterStandby('Device went offline…');
+          } else if (isOnline && state.wasMining) {
+            exitStandby('Network restored…');
+          } else if (isOnline && !battery.charging) {
+            showInterstitial('Device went online…');
+            setTimeout(function () {
+              showInterstitial('Waiting for power…');
+              setTimeout(function () {
+                showInterstitial('Click to activate…');
+              }, 2000);
+            }, 2000);
+          } else if (!state.isMining) {
+            form.toggle.click();
+            setTimeout(function () {
+              showInterstitial('Device went online…');
+            }, 2000);
+          }
+        });
       };
       const handleVisibilityChange = evt => {
         if (state.isMining && document['hidden'])
@@ -260,7 +283,7 @@
           return;
         }
         if (!battery.charging) {
-          showInterstitial('Saving battery…')
+          showInterstitial('Waiting for power…')
           setTimeout(function () {
             enterStandby('Click to activate…');
           }, 5000);
