@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.11"></a>
+# [1.0.0-beta.11](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.10...v1.0.0-beta.11) (2018-12-14)
+
+
+### Features
+
+* **layouts/toolbar:** add interstitial mechanism ([2e5e061](https://git.habd.as/comfusion/toxic-swamp/commits/2e5e061)), closes [#13](https://git.habd.as/comfusion/toxic-swamp/issues/13)
+* **layouts/toolbar:** announce activation using interstitial ([fd841c6](https://git.habd.as/comfusion/toxic-swamp/commits/fd841c6))
+
+
+
 <a name="1.0.0-beta.10"></a>
 # [1.0.0-beta.10](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2018-12-10)
 
