@@ -50,11 +50,11 @@
     background-color: #ff2e8800;
     border-radius: 4px;
     transition: all 0.25s ease;
-    display: none;
+    display: flex;
     margin-left: 20px;
     text-align: right;
   }
-  .js-toolbar.-loaded {
+  .js-toolbar.-reveal {
     animation: reveal 0.3s both;
     animation-delay: 0.15s;
   }
@@ -85,12 +85,12 @@
   }
   .js-toolbar .help-block:not(.status) {
     position: absolute;
-    bottom: 9px;
+    bottom: 8px;
     right: 0;
     padding: 8px;
     /* background-color: black; */
     border-radius: 4px;
-    margin-bottom: -9px;
+    margin-bottom: -8px;
     padding-right: 50px;
     width: 250px;
   }

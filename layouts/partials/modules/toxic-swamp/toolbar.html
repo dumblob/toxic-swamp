@@ -3,10 +3,10 @@
 {{ $toggle := partial "components/button" (dict "isghost" "true" "type" "success" "name" "toggle") }}
 {{ $controls := partial "components/buttongroup" (dict "class" "btn-controls" "body" $toggle) }}
 
-<form name="webminer" class="grid -center js-toolbar">
-  {{ partial "components/helpblock" (dict "class" "status" "body" (`<small id="js-status">Connecting to server…</small>` | safeHTML))}}
+<form hidden name="webminer" class="grid -center js-toolbar">
+  {{ partial "components/helpblock" (dict "class" "status" "body" (`<small id="js-status"></small>` | safeHTML))}}
   {{ partial "components/helpblock" (dict "class" "interstitial" "body" (`<small id="js-interstitial" hidden>Click to activate…</small>` | safeHTML))}}
-  {{ partial "components/helpblock" (dict "class" "ticker" "body" (`<small id="js-ticker">0 hashes (0 h/s)</small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "class" "ticker" "body" (`<small id="js-ticker"></small>` | safeHTML))}}
   <input name="throttle" type="range" min="10" max="100" step="5" value="30">
   &nbsp;{{ $controls }}
 </form>
@@ -68,12 +68,15 @@
     const state = {
       isMining: false,
       shouldMine: SessionManager.getShouldMine(),
-      wasMining: null,
       throttle: SessionManager.getThrottle(),
       hashrate: null,
       totalHashes: SessionManager.getTotalHashes(),
       shouldDisclose: window.matchMedia('(min-width: 840px)').matches
     };
+
+    if (state.throttle) {
+      document.forms.webminer.throttle.value = 100 - state.throttle;
+    }
 
     const debug = args =>
       (metadata.get('status') === 'debugging') && console.log(args);
@@ -86,26 +89,131 @@
       const interstitial = form.querySelector('#js-interstitial');
       const ticker = form.querySelector('#js-ticker');
 
-      let tickerTimeoutId;
-
-      (function initToolbar () {
-        WebMiner.initialize();
-        const total = SessionManager.getTotalHashes() || 0;
-        ticker.textContent = `${total} hashes (0 h/s)`;
-        form.throttle.value = 100 - WebMiner.getThrottle();
-      })();
-
-      (function showToolbar () {
-        if (!state.shouldDisclose) {
-          ticker.hidden = true;
-          form.throttle.hidden = true;
-          status.hidden = true;
-        } else if (!state.shoudMine) {
-          ticker.hidden = true
+      class Miner {
+        static activate (shouldPersist = false) {
+          state.isMining = true;
+          startMining();
+          shouldPersist && (() => {
+            SessionManager.setShouldMine(true);
+            showInterstitial('Miner activated…');
+          })();
         }
-        form.style.display = 'flex';
-        form.classList.add('-loaded');
-      })();
+        static deactivate (shouldPersist = false) {
+          state.isMining = false;
+          stopMining();
+          shouldPersist && (() => {
+            SessionManager.setShouldMine(false);
+            showInterstitial('Miner deactivated…');
+          })();
+        }
+        static getActiveStatus () {
+          return state.isMining ? 'active' : 'inactive';
+        }
+      }
+
+      class Toolbar {
+        static initialize () {
+          WebMiner.initialize();
+          const total = SessionManager.getTotalHashes() || 0;
+          ticker.textContent = `${total} hashes (0 h/s)`;
+          form.throttle.value = 100 - WebMiner.getThrottle();
+        }
+        static togglePower (wasUserInitiated = false) {
+          const isMinerActive = Miner.getActiveStatus() === 'active';
+          const isDeviceOnline = navigator.onLine;
+          isMinerActive
+            ? Miner.deactivate(wasUserInitiated) && Toolbar.toggleStatusbar()
+            : Miner.activate(wasUserInitiated);
+          form.toggle.classList.toggle('-active');
+          isDeviceOnline
+            ? updateStatus('waiting for server')
+            : updateStatus('waiting for network');
+        }
+        static setThrottle (throttle) {
+          WebMiner.setThrottle(100 - throttle);
+          SessionManager.setThrottle(100 - throttle);
+          showInterstitial(`${throttle}% hash power…`);
+        }
+        static setDisplayMode (displayMode = 'full') {
+          const isValidMode = [
+            'full', 'compact', 'hidden', 'minimal'
+          ].includes(displayMode);
+          if (!isValidMode) throw new Error(`Toolbar expected display mode of 'full', 'compact', 'minimal' or 'hidden': '${displayMode}' received`);
+          Toolbar.displayMode = displayMode;
+          Toolbar.updateDisplay();
+        }
+        static getDisplayMode () {
+          return Toolbar.displayMode;
+        }
+        static updateDisplay () {
+          const displayMode = Toolbar.displayMode;
+          const shouldMine = SessionManager.getShouldMine();
+          const visibleItems = new Set([
+            form, ticker, status, form.toggle, form.throttle
+          ]);
+          let hiddenItems;
+          switch (displayMode) {
+            case 'full':
+              hiddenItems = shouldMine ? [] : [].concat(ticker);
+              break;
+            case 'compact':
+              hiddenItems = [].concat([form, ticker, status]);
+              break;
+            case 'minimal':
+              hiddenItems = [].concat([form, ticker, status, form.throttle]);
+              break;
+            case 'hidden':
+              hiddenItems = [].concat(
+                [form, ticker, status, form.toggle, form.throttle]
+              );
+              break;
+          }
+          hiddenItems.forEach(hiddenItem => {
+            hiddenItem.hidden = true;
+            visibleItems.delete(hiddenItem);
+          });
+          visibleItems.forEach(visibleItem => {
+            visibleItem.hidden = false;
+          });
+        }
+        static toggleStatusbar () {
+          const isMinerActive = Miner.getActiveStatus() === 'active';
+          isMinerActive
+            ? form.classList.toggle('-disclosed')
+            : form.classList.remove('-disclosed');
+        }
+        static registerListeners () {
+          form.addEventListener(
+            'submit', evt => evt.preventDefault()
+          );
+          form.throttle.addEventListener(
+            'change', evt => Toolbar.setThrottle(evt.target.value)
+          );
+          form.toggle.addEventListener(
+            'keyup', evt => evt.keyCode === 13 && Toolbar.togglePower(true)
+          );
+          form.toggle.addEventListener(
+            'click', evt => evt.detail && Toolbar.togglePower(true)
+          );
+          form.toggle.addEventListener(
+            'mouseenter', evt => Toolbar.toggleStatusbar()
+          );
+          form.toggle.addEventListener(
+            'mouseleave', evt => Toolbar.toggleStatusbar()
+          );
+          form.toggle.addEventListener(
+            'focus', evt => Toolbar.toggleStatusbar()
+          );
+          form.toggle.addEventListener(
+            'blur', evt => Toolbar.toggleStatusbar()
+          );
+        }
+      }
+      const displaySetting = state.shouldDisclose ? 'full' : 'compact';
+
+      Toolbar.initialize();
+      Toolbar.setDisplayMode(displaySetting);
+      Toolbar.registerListeners();
 
       const updateStatus = data => {
         status.textContent = `[${new Date().toLocaleString()}] `;
@@ -121,18 +229,18 @@
           status.textContent += `error: ${data.param}`;
         } else status.textContent += data;
         debug(status.textContent);
-      }
-      const showInterstitial = (message, duration = 2000) => {
-        clearTimeout(tickerTimeoutId);
-        interstitial.textContent = message;
-        ticker.hidden = true;
-        interstitial.hidden = false;
-        tickerTimeoutId = setTimeout(function () {
-          ticker.hidden = false;
-          interstitial.hidden = true;
-        }, duration);
-      }
-
+      };
+      const showInterstitial = (message, delay = 0) => {
+        setTimeout(function () {
+          interstitial.textContent = message;
+          ticker.hidden = true;
+          interstitial.hidden = false;
+          setTimeout(function () {
+            ticker.hidden = false;
+            interstitial.hidden = true;
+          }, 2000);
+        }, delay);
+      };
       const updateTotal = () => {
         const total = state.totalHashes + WebMiner.getHashTotal();
         const hashrate = state.hashrate || 0;
@@ -142,116 +250,99 @@
       let intervalId;
       let rafId;
       const startMining = () => {
+        cancelAnimationFrame(rafId);
+        clearTimeout(intervalId);
         WebMiner.start();
-        tickerTimeoutId = setTimeout(function () {
-          const receiveStack = WebMiner.getReceiveStack();
-          const sendStack = WebMiner.getSendStack();
-          intervalId = setInterval(function () {
-            const hashTotal = WebMiner.getHashTotal();
-            while (sendStack.length) updateStatus(sendStack.pop());
-            while (receiveStack.length) updateStatus(receiveStack.pop());
-            state.hashrate = Math.floor(hashTotal / 2 + state.hashrate / 2);
-            state.totalHashes = state.totalHashes + hashTotal;
-            WebMiner.setHashTotal(0);
-          }, 2000);
-          const doUpdateTotal = () => {
-            updateTotal();
-            rafId = requestAnimationFrame(doUpdateTotal);
-          };
-          cancelAnimationFrame(rafId);
-          rafId = requestAnimationFrame(doUpdateTotal);
+        const receiveStack = WebMiner.getReceiveStack();
+        const sendStack = WebMiner.getSendStack();
+        intervalId = setInterval(function () {
+          const hashTotal = WebMiner.getHashTotal();
+          while (sendStack.length) updateStatus(sendStack.pop());
+          while (receiveStack.length) updateStatus(receiveStack.pop());
+          state.hashrate = Math.floor(hashTotal / 2 + state.hashrate / 2);
+          state.totalHashes = state.totalHashes + hashTotal;
+          WebMiner.setHashTotal(0);
         }, 1000);
+        const doUpdateTotal = () => {
+          updateTotal();
+          rafId = requestAnimationFrame(doUpdateTotal);
+        };
+        rafId = requestAnimationFrame(doUpdateTotal);
       };
       const stopMining = () => {
         WebMiner.stop();
-        cancelAnimationFrame(rafId);
-        clearTimeout(tickerTimeoutId);
+        setInterval(function () {
+          if (state.hashrate != 0) return;
+          cancelAnimationFrame(rafId);
+          clearInterval(intervalId);
+        }, 1000);
       }
 
-      const handleFormSubmit = evt => {
-        evt.preventDefault();
-        state.isMining
-          ? showInterstitial('Miner deactivated…') && stopMining()
-          : showInterstitial('Miner activated…') && startMining();
-        if (!navigator.onLine)
-          status.textContent = 'Waiting for network…';
-        evt.target.toggle.classList.toggle('-active');
-        state.isMining = !state.isMining;
-      };
-      const handleToggleKeyup = evt => {
-        const isEnterKey = evt.keyCode === 13;
-        isEnterKey && SessionManager.setShouldMine(!!state.isMining);
-      };
-      const handleToggleClick = evt => {
-        const numClicks = evt.detail;
-        numClicks && SessionManager.setShouldMine(!state.isMining);
-      };
-      const handleThrottleChange = evt => {
-        const throttle = 100 - evt.target.value;
-        WebMiner.setThrottle(throttle);
-        SessionManager.setThrottle(throttle);
-        showInterstitial(`${100 - throttle}% hash power…`);
-      };
-      const showDisclosureMaybe = evt => {
-        const hasActiveClass = form.toggle.classList.contains('-active');
-        const target = evt.target.form || evt.target;
-        hasActiveClass && target.classList.toggle('-disclosed');
-      };
-      form.addEventListener('submit', handleFormSubmit);
-      form.addEventListener('mouseenter', showDisclosureMaybe);
-      form.addEventListener('mouseleave', showDisclosureMaybe);
-      form.toggle.addEventListener('focus', showDisclosureMaybe);
-      form.toggle.addEventListener('blur', showDisclosureMaybe);
-      form.toggle.addEventListener('keyup', handleToggleKeyup);
-      form.toggle.addEventListener('click', handleToggleClick);
-      form.throttle.addEventListener('change', handleThrottleChange);
-
-      const enterStandby = message => {
-        state.wasMining = true;
-        state.isMining && form.toggle.click();
-        message && setTimeout(function () {
-          showInterstitial(message);
-        }, 2000);
-      };
-      const exitStandby = message => {
-        !state.isMining && form.toggle.click();
-        status.textContent = "Connecting to server…";
-        message && setTimeout(function () {
-          showInterstitial(message);
-        }, 2000);
-      };
-
-      const handleOnlineChange = evt => {
-        if (!state.shouldMine) return;
-        const isOnline = evt.type === 'online';
-        window.navigator.getBattery().then(battery => {
-          if (!isOnline && state.isMining) {
-            enterStandby('Device went offline…');
-          } else if (isOnline && state.wasMining) {
-            exitStandby('Network restored…');
-          } else if (isOnline && !battery.charging) {
-            showInterstitial('Device went online…');
-            setTimeout(function () {
-              showInterstitial('Waiting for power…');
-              setTimeout(function () {
-                showInterstitial('Click to activate…');
-              }, 2000);
-            }, 2000);
-          } else if (!state.isMining) {
-            form.toggle.click();
-            setTimeout(function () {
-              showInterstitial('Device went online…');
-            }, 2000);
+      const handleChargingChange = evt => {
+        const shouldMine = SessionManager.getShouldMine();
+        if (!shouldMine) return;
+        const isMinerActive = Miner.getActiveStatus() === 'active';
+        const startedCharging = evt.target.charging;
+        const isDeviceOnline = navigator.onLine;
+        if (startedCharging) {
+          const isDeviceOnline = navigator.onLine;
+          showInterstitial('Device powered…');
+          !isMinerActive && Toolbar.togglePower()
+          if (isDeviceOnline) {
+            showInterstitial('Mining resumed…', 3000);
+          } else {
+            updateStatus('waiting for network');
+            showInterstitial('Network disconnected…', 3000);
           }
-        });
+        } else {
+          showInterstitial('Power unplugged…');
+          isMinerActive && Toolbar.togglePower();
+          isDeviceOnline
+            ? showInterstitial('Saving battery…', 3000)
+            : showInterstitial('Network disconnected…', 3000);
+        }
+      };
+      const handleOnlineChange = evt => {
+        const shouldMine = SessionManager.getShouldMine();
+        if (!shouldMine) return;
+        const isMinerActive = Miner.getActiveStatus() === 'active';
+        const wentOnline = evt.type === 'online';
+        if (wentOnline) {
+          showInterstitial('Device online…');
+          if (isMinerActive) {
+            updateStatus('waiting for server');
+            showInterstitial('Mining resumed…', 3000);
+          } else {
+            showInterstitial('Click to activate…', 3000);
+          }
+        } else {
+          showInterstitial('Device went offline…');
+          if (isMinerActive) {
+            updateStatus('waiting for network');
+            showInterstitial('Miner on standby…', 3000);
+          } else {
+            showInterstitial('Mining paused…', 3000);
+          }
+        }
       };
       const handleVisibilityChange = evt => {
-        if (state.isMining && document['hidden'])
-          enterStandby('Waiting for visibility…');
-        else if (!document['hidden'] && state.wasMining)
-          exitStandby();
-        else
-          state.wasMining = false;
+        const shouldMine = SessionManager.getShouldMine();
+        if (!shouldMine) return;
+        const isMinerActive = Miner.getActiveStatus() === 'active';
+        const wasDocumentHidden = document['hidden'];
+        if (wasDocumentHidden) {
+          isMinerActive && Toolbar.togglePower();
+        } else {
+          navigator.getBattery().then(battery => {
+            const isDeviceCharging = battery.charging;
+            if (isDeviceCharging) {
+              !isMinerActive && Toolbar.togglePower();
+            } else {
+              showInterstitial('Saving battery…');
+              showInterstitial('Click to override…', 3000);
+            }
+          });
+        }
       };
       const handlePageHide = evt => {
         const total = state.totalHashes + WebMiner.getHashTotal();
@@ -261,35 +352,27 @@
         state.totalHashes = SessionManager.getTotalHashes() || 0;
         ticker.textContent = `${state.totalHashes} hashes (0 h/s)`;
       };
+
       window.addEventListener('online', handleOnlineChange);
       window.addEventListener('offline', handleOnlineChange);
       window.addEventListener('pageshow', handlePageShow);
       window.addEventListener('pagehide', handlePageHide);
       document.addEventListener('visibilitychange', handleVisibilityChange);
 
-      const handleChargingChange = evt => {
-        if (state.isMining && !evt.target.charging)
-          enterStandby('Waiting for power…');
-        else if (evt.target.charging && state.wasMining)
-          exitStandby('Power restored…');
-      };
-      window.navigator.getBattery().then(battery => {
+      navigator.getBattery().then(battery => {
         battery.onchargingchange = handleChargingChange;
-        if (!state.shouldMine) return;
-        if (!navigator.onLine) {
-          setTimeout(function () {
-            showInterstitial('Waiting for network…')
-          }, 5000);
-          return;
+        const shouldMine = SessionManager.getShouldMine();
+        if (!shouldMine) return;
+        const isDeviceOnline = navigator.onLine;
+        const isDeviceCharging = battery.charging;
+        if (isDeviceCharging) {
+          if (isDeviceOnline) return Toolbar.togglePower();
+          showInterstitial('Network disconnected…');
+          showInterstitial('Mining suspended…', 3000);
+        } else {
+          showInterstitial('Power unplugged…');
+          showInterstitial('Miner on standby…', 3000);
         }
-        if (!battery.charging) {
-          showInterstitial('Waiting for power…')
-          setTimeout(function () {
-            enterStandby('Click to activate…');
-          }, 5000);
-          return;
-        }
-        form.toggle.click();
       }); // zip it up and zip it out
     });
   })(window, document);
