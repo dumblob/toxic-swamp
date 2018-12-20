@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.12"></a>
+# [1.0.0-beta.12](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2018-12-20)
+
+
+### Features
+
+* **layouts/toolbar:** hide toolbar with js disabled ([8fc32b6](https://git.habd.as/comfusion/toxic-swamp/commits/8fc32b6))
+* **layouts/toolbar:** refactor to add display modes, messages ([8ff9ec7](https://git.habd.as/comfusion/toxic-swamp/commits/8ff9ec7))
+
+
+
 <a name="1.0.0-beta.11"></a>
 # [1.0.0-beta.11](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.10...v1.0.0-beta.11) (2018-12-14)
 
