@@ -118,7 +118,7 @@
         static initialize () {
           WebMiner.initialize();
           const total = SessionManager.getTotalHashes() || 0;
-          ticker.textContent = `${total} hashes (0 h/s)`;
+          ticker.textContent = `${total} hashes (0 H/s)`;
           form.throttle.value = 100 - WebMiner.getThrottle();
         }
         static togglePower (wasUserInitiated = false) {
@@ -247,7 +247,7 @@
       const updateTotal = () => {
         const total = state.totalHashes + WebMiner.getHashTotal();
         const hashrate = state.hashrate || 0;
-        ticker.textContent = `${total} hashes (${hashrate} h/s)`;
+        ticker.textContent = `${total} hashes (${hashrate} H/s)`;
       };
 
       let intervalId;
@@ -353,7 +353,7 @@
       };
       const handlePageShow = evt => {
         state.totalHashes = SessionManager.getTotalHashes() || 0;
-        ticker.textContent = `${state.totalHashes} hashes (0 h/s)`;
+        ticker.textContent = `${state.totalHashes} hashes (0 H/s)`;
       };
 
       window.addEventListener('online', handleOnlineChange);
