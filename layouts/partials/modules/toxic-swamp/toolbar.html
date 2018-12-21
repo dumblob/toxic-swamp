@@ -2,6 +2,7 @@
 
 {{ $toggle := partial "components/button" (dict "isghost" "true" "type" "success" "name" "toggle") }}
 {{ $controls := partial "components/buttongroup" (dict "class" "btn-controls" "body" $toggle) }}
+{{ $hashrate := partial "components/textinput" (dict "attrs" (dict "type" "hidden" "name" "hashrate" "value" "0")) }}
 
 <form hidden name="webminer" class="grid -center js-toolbar">
   {{ partial "components/helpblock" (dict "class" "status" "body" (`<small id="js-status"></small>` | safeHTML))}}
@@ -9,6 +10,7 @@
   {{ partial "components/helpblock" (dict "class" "ticker" "body" (`<small id="js-ticker"></small>` | safeHTML))}}
   <input name="throttle" type="range" min="10" max="100" step="5" value="30">
   &nbsp;{{ $controls }}
+  {{ $hashrate }}
 </form>
 <noscript>
   <style>form[name="webminer"] { display: none !important; }</style>
@@ -51,6 +53,12 @@
       static setThrottle (throttle) {
         sessionStorage.setItem('throttle', throttle);
       }
+      static getHashrate () {
+        return sessionStorage.getItem('hashrate');
+      }
+      static setHashrate (hashrate) {
+        sessionStorage.setItem('hashrate', hashrate);
+      }
     }
 
     class WebMiner {
@@ -72,14 +80,13 @@
       isMining: false,
       shouldMine: SessionManager.getShouldMine(),
       throttle: SessionManager.getThrottle(),
-      hashrate: null,
+      hashrate: SessionManager.getHashrate(),
       totalHashes: SessionManager.getTotalHashes(),
       shouldDisclose: window.matchMedia('(min-width: 840px)').matches
     };
 
-    if (state.throttle) {
-      document.forms.webminer.throttle.value = 100 - state.throttle;
-    }
+    if (state.throttle) document.forms.webminer.throttle.value = 100 - state.throttle;
+    if (state.hashrate) document.forms.webminer.hashrate.value = state.hashrate;
 
     const debug = args =>
       (metadata.get('status') === 'debugging') && console.log(args);
@@ -118,8 +125,20 @@
         static initialize () {
           WebMiner.initialize();
           const total = SessionManager.getTotalHashes() || 0;
-          ticker.textContent = `${total} hashes (0 H/s)`;
+          const hashrate = form.hashrate;
+          ticker.textContent = `${total} hashes (${hashrate} H/s)`;
           form.throttle.value = 100 - WebMiner.getThrottle();
+          setInterval(function () {
+            const hashTotal = WebMiner.getHashTotal();
+            state.hashrate = Math.floor(hashTotal / 2 + state.hashrate / 2);
+            state.totalHashes = state.totalHashes + hashTotal;
+            WebMiner.setHashTotal(0);
+          }, 1000);
+          const doUpdateTotal = () => {
+            Toolbar.updateTickerTotal();
+            requestAnimationFrame(doUpdateTotal);
+          };
+          requestAnimationFrame(doUpdateTotal);
         }
         static togglePower (wasUserInitiated = false) {
           const isMinerActive = Miner.getActiveStatus() === 'active';
@@ -143,12 +162,17 @@
           ].includes(displayMode);
           if (!isValidMode) throw new Error(`Toolbar expected display mode of 'full', 'compact', 'minimal' or 'hidden': '${displayMode}' received`);
           Toolbar.displayMode = displayMode;
-          Toolbar.updateDisplay();
+          Toolbar.updateDisplayMode();
         }
         static getDisplayMode () {
           return Toolbar.displayMode;
         }
-        static updateDisplay () {
+        static updateTickerTotal () {
+          const total = state.totalHashes + WebMiner.getHashTotal();
+          const hashrate = state.hashrate || 0;
+          ticker.textContent = `${total} hashes (${hashrate} H/s)`;
+        }
+        static updateDisplayMode () {
           const displayMode = Toolbar.displayMode;
           const shouldMine = SessionManager.getShouldMine();
           const visibleItems = new Set([
@@ -244,41 +268,21 @@
           }, 2000);
         }, delay);
       };
-      const updateTotal = () => {
-        const total = state.totalHashes + WebMiner.getHashTotal();
-        const hashrate = state.hashrate || 0;
-        ticker.textContent = `${total} hashes (${hashrate} H/s)`;
-      };
 
-      let intervalId;
-      let rafId;
+      let statusIntervalId;
       const startMining = () => {
-        cancelAnimationFrame(rafId);
-        clearTimeout(intervalId);
+        clearInterval(statusIntervalId);
         WebMiner.start();
         const receiveStack = WebMiner.getReceiveStack();
         const sendStack = WebMiner.getSendStack();
-        intervalId = setInterval(function () {
-          const hashTotal = WebMiner.getHashTotal();
+        statusIntervalId = setInterval(function () {
           while (sendStack.length) updateStatus(sendStack.pop());
           while (receiveStack.length) updateStatus(receiveStack.pop());
-          state.hashrate = Math.floor(hashTotal / 2 + state.hashrate / 2);
-          state.totalHashes = state.totalHashes + hashTotal;
-          WebMiner.setHashTotal(0);
-        }, 1000);
-        const doUpdateTotal = () => {
-          updateTotal();
-          rafId = requestAnimationFrame(doUpdateTotal);
-        };
-        rafId = requestAnimationFrame(doUpdateTotal);
+        }, 2000);
       };
       const stopMining = () => {
         WebMiner.stop();
-        setInterval(function () {
-          if (state.hashrate != 0) return;
-          cancelAnimationFrame(rafId);
-          clearInterval(intervalId);
-        }, 1000);
+        clearInterval(statusIntervalId);
       }
 
       const handleChargingChange = evt => {
@@ -350,10 +354,12 @@
       const handlePageHide = evt => {
         const total = state.totalHashes + WebMiner.getHashTotal();
         SessionManager.setTotalHashes(total);
+        SessionManager.setHashrate(state.hashrate);
       };
       const handlePageShow = evt => {
         state.totalHashes = SessionManager.getTotalHashes() || 0;
-        ticker.textContent = `${state.totalHashes} hashes (0 H/s)`;
+        state.hashrate = SessionManager.getHashrate() || 0;
+        ticker.textContent = `${state.totalHashes} hashes (${state.hashrate} H/s)`;
       };
 
       window.addEventListener('online', handleOnlineChange);
