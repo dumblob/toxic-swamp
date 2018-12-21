@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.13"></a>
+# [1.0.0-beta.13](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2018-12-21)
+
+
+### Features
+
+* **layouts/toolbar:** persist running hashrate across pageloads ([e07ebea](https://git.habd.as/comfusion/toxic-swamp/commits/e07ebea))
+
+
+
 <a name="1.0.0-beta.12"></a>
 # [1.0.0-beta.12](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2018-12-20)
 
