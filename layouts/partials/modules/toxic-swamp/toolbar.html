@@ -352,6 +352,7 @@
         } else {
           showInterstitial(helpText.networkDisconnected);
           if (isMinerActive) {
+            Toolbar.togglePower();
             updateStatus(statusText.waitingForNetwork);
             showInterstitial(helpText.miningPaused, 3000);
           } else {
