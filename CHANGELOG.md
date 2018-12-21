@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.14"></a>
+# [1.0.0-beta.14](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.13...v1.0.0-beta.14) (2018-12-21)
+
+
+### Bug Fixes
+
+* **layouts/toolbar:** toggle toolbar power on network disconnect ([943a7d3](https://git.habd.as/comfusion/toxic-swamp/commits/943a7d3))
+
+
+
 <a name="1.0.0-beta.13"></a>
 # [1.0.0-beta.13](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2018-12-21)
 
