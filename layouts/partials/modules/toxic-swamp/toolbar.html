@@ -102,13 +102,85 @@
       const interstitial = form.querySelector('#js-interstitial');
       const ticker = form.querySelector('#js-ticker');
 
-      class Miner {
+      const displaySetting = state.shouldDisclose ? 'full' : 'compact';
+      const helpText = {
+        minerActivated: 'Miner activated…',
+        minerDeactivated: 'Miner deactivated…',
+        deviceOnline: 'Device online…',
+        deviceOffline: 'Device offline…',
+        devicePowered: 'Device powered…',
+        powerUnplugged: 'Power unplugged…',
+        miningPaused: 'Mining paused…',
+        miningResumed: 'Mining resumed…',
+        networkDisconnected: 'Network disconnected…',
+        networkRestored: 'Network restored…',
+        clickToActivate: 'Click to activate…',
+        clickToOverride: 'Click to override…',
+        savingBattery: 'Saving battery…',
+        phraseHashPower: 'hash power…',
+        wordHashes: 'hashes',
+        unitsPerSecond: 'H/s'
+      };
+      const statusText = {
+        waitingForNetwork: 'waiting for network',
+        waitingForServer: 'waiting for server',
+        newJob: 'new job',
+        solvedJob: 'solved job',
+        poolAcceptedHash: 'pool accepted hash!',
+        error: 'error'
+      }
+      const errorText = {
+        displayModeInvalid: `Display mode invalid! Expected one of 'full', 'compact', 'minimal' or 'hidden'.`
+      }
+
+      let statusIntervalId;
+      const startMining = () => {
+        clearInterval(statusIntervalId);
+        WebMiner.start();
+        const { receiveStack, sendStack } = WebMiner;
+        statusIntervalId = setInterval(function () {
+          while (sendStack.length) updateStatus(sendStack.pop());
+          while (receiveStack.length) updateStatus(receiveStack.pop());
+        }, 2000);
+      };
+      const stopMining = () => {
+        WebMiner.stop();
+        clearInterval(statusIntervalId);
+      }
+      const updateStatus = data => {
+        status.textContent = `[${new Date().toLocaleString()}] `;
+        if (data.identifier === 'job') {
+          form.toggle.classList.add('-mining');
+          status.textContent += `${statusText.newJob}: ${data.job_id}`;
+        } else if (data.identifier === 'solved') {
+          status.textContent += `${statusText.solvedJob}: ${data.job_id}`;
+        } else if (data.identifier === 'hashsolved') {
+          status.textContent += statusText.poolAcceptedHash;
+        } else if (data.identifier === 'error') {
+          form.toggle.classList.remove('-mining');
+          status.textContent += `${statusText.error}: ${data.param}`;
+        } else status.textContent += data;
+        debug(status.textContent);
+      };
+      const showInterstitial = (message, delay = 0) => {
+        setTimeout(function () {
+          interstitial.textContent = message;
+          ticker.hidden = true;
+          interstitial.hidden = false;
+          setTimeout(function () {
+            ticker.hidden = false;
+            interstitial.hidden = true;
+          }, 2000);
+        }, delay);
+      };
+
+      class Actuator {
         static activate (shouldPersist = false) {
           state.isMining = true;
           startMining();
           shouldPersist && (() => {
             SessionManager.shouldMine = true;
-            showInterstitial('Miner activated…');
+            showInterstitial(helpText.minerActivated);
           })();
         }
         static deactivate (shouldPersist = false) {
@@ -116,7 +188,7 @@
           stopMining();
           shouldPersist && (() => {
             SessionManager.shouldMine = false;
-            showInterstitial('Miner deactivated…');
+            showInterstitial(helpText.minerDeactivated);
           })();
         }
         static get status () {
@@ -140,26 +212,26 @@
           requestAnimationFrame(updateTicker);
         }
         static togglePower (wasUserInitiated = false) {
-          const isMinerActive = Miner.status === 'active';
+          const isMinerActive = Actuator.status === 'active';
           const isDeviceOnline = navigator.onLine;
           form.toggle.classList.toggle('-active');
           isMinerActive
-            ? Miner.deactivate(wasUserInitiated) && Toolbar.toggleStatusbar()
-            : Miner.activate(wasUserInitiated);
+            ? Actuator.deactivate(wasUserInitiated) && Toolbar.toggleStatusbar()
+            : Actuator.activate(wasUserInitiated);
           isDeviceOnline
-            ? updateStatus('waiting for server')
-            : updateStatus('waiting for network');
+            ? updateStatus(statusText.waitingForServer)
+            : updateStatus(statusText.waitingForNetwork);
         }
         static setThrottle (throttle) {
           WebMiner.throttle = 100 - throttle;
           SessionManager.throttle = 100 - throttle;
-          showInterstitial(`${throttle}% hash power…`);
+          showInterstitial(`${throttle}% ${helpText.phraseHashPower}`);
         }
         static setDisplayMode (displayMode = 'full') {
           const isValidMode = [
             'full', 'compact', 'hidden', 'minimal'
           ].includes(displayMode);
-          if (!isValidMode) throw new Error(`Toolbar expected display mode of 'full', 'compact', 'minimal' or 'hidden': '${displayMode}' received`);
+          if (!isValidMode) throw new Error(errorText.displayModeInvalid);
           Toolbar.displayMode = displayMode;
           Toolbar.updateDisplayMode();
         }
@@ -169,7 +241,7 @@
         static updateTickerTotal () {
           const total = state.totalHashes + WebMiner.hashTotal;
           const hashrate = state.hashrate || 0;
-          ticker.textContent = `${total} hashes (${hashrate} H/s)`;
+          ticker.textContent = `${total} ${helpText.wordHashes} (${hashrate} ${helpText.unitsPerSecond})`;
         }
         static updateDisplayMode () {
           const displayMode = Toolbar.displayMode;
@@ -203,7 +275,7 @@
           });
         }
         static toggleStatusbar () {
-          const isMinerActive = Miner.status === 'active';
+          const isMinerActive = Actuator.status === 'active';
           isMinerActive
             ? form.classList.toggle('-disclosed')
             : form.classList.remove('-disclosed');
@@ -235,105 +307,62 @@
           );
         }
       }
-      const displaySetting = state.shouldDisclose ? 'full' : 'compact';
 
       Toolbar.initialize();
       Toolbar.setDisplayMode(displaySetting);
       Toolbar.registerListeners();
 
-      const updateStatus = data => {
-        status.textContent = `[${new Date().toLocaleString()}] `;
-        if (data.identifier === 'job') {
-          form.toggle.classList.add('-mining');
-          status.textContent += `new job: ${data.job_id}`;
-        } else if (data.identifier === 'solved') {
-          status.textContent += `solved job: ${data.job_id}`;
-        } else if (data.identifier === 'hashsolved') {
-          status.textContent += 'pool accepted hash!';
-        } else if (data.identifier === 'error') {
-          form.toggle.classList.remove('-mining');
-          status.textContent += `error: ${data.param}`;
-        } else status.textContent += data;
-        debug(status.textContent);
-      };
-      const showInterstitial = (message, delay = 0) => {
-        setTimeout(function () {
-          interstitial.textContent = message;
-          ticker.hidden = true;
-          interstitial.hidden = false;
-          setTimeout(function () {
-            ticker.hidden = false;
-            interstitial.hidden = true;
-          }, 2000);
-        }, delay);
-      };
-
-      let statusIntervalId;
-      const startMining = () => {
-        clearInterval(statusIntervalId);
-        WebMiner.start();
-        const { receiveStack, sendStack } = WebMiner;
-        statusIntervalId = setInterval(function () {
-          while (sendStack.length) updateStatus(sendStack.pop());
-          while (receiveStack.length) updateStatus(receiveStack.pop());
-        }, 2000);
-      };
-      const stopMining = () => {
-        WebMiner.stop();
-        clearInterval(statusIntervalId);
-      }
-
       const handleChargingChange = evt => {
         const shouldMine = SessionManager.shouldMine;
         if (!shouldMine) return;
-        const isMinerActive = Miner.status === 'active';
+        const isMinerActive = Actuator.status === 'active';
         const startedCharging = evt.target.charging;
         const isDeviceOnline = navigator.onLine;
         if (startedCharging) {
           const isDeviceOnline = navigator.onLine;
-          showInterstitial('Device powered…');
+          showInterstitial(helpText.devicePowered);
           !isMinerActive && Toolbar.togglePower()
           if (isDeviceOnline) {
-            showInterstitial('Mining resumed…', 3000);
+            showInterstitial(helpText.miningResumed, 3000);
           } else {
             updateStatus('waiting for network');
-            showInterstitial('Network disconnected…', 3000);
+            showInterstitial(helpText.networkDisconnected, 3000);
           }
         } else {
-          showInterstitial('Power unplugged…');
+          showInterstitial(helpText.powerUnplugged);
           isMinerActive && Toolbar.togglePower();
           isDeviceOnline
-            ? showInterstitial('Saving battery…', 3000)
-            : showInterstitial('Network disconnected…', 3000);
+            ? showInterstitial(helpText.savingBattery, 3000)
+            : showInterstitial(helpText.networkDisconnected, 3000);
         }
       };
       const handleOnlineChange = evt => {
         const shouldMine = SessionManager.shouldMine;
         if (!shouldMine) return;
-        const isMinerActive = Miner.status === 'active';
+        const isMinerActive = Actuator.status === 'active';
         const wentOnline = evt.type === 'online';
         if (wentOnline) {
-          showInterstitial('Device online…');
+          showInterstitial(helpText.networkRestored);
           if (isMinerActive) {
-            updateStatus('waiting for server');
-            showInterstitial('Mining resumed…', 3000);
+            updateStatus(statusText.waitingForServer);
+            showInterstitial(helpText.miningResumed, 3000);
           } else {
-            showInterstitial('Click to activate…', 3000);
+            showInterstitial(helpText.clickToActivate, 3000);
           }
         } else {
-          showInterstitial('Device went offline…');
+          showInterstitial(helpText.networkDisconnected);
           if (isMinerActive) {
-            updateStatus('waiting for network');
-            showInterstitial('Miner on standby…', 3000);
+            updateStatus(statusText.waitingForNetwork);
+            showInterstitial(helpText.miningPaused, 3000);
           } else {
-            showInterstitial('Mining paused…', 3000);
+            showInterstitial(helpText.miningPaused, 3000);
           }
         }
       };
       const handleVisibilityChange = evt => {
         const shouldMine = SessionManager.shouldMine;
         if (!shouldMine) return;
-        const isMinerActive = Miner.status === 'active';
+        const isMinerActive = Actuator.status === 'active';
         const wasDocumentHidden = document['hidden'];
         if (wasDocumentHidden) {
           isMinerActive && Toolbar.togglePower();
@@ -343,8 +372,8 @@
             if (isDeviceCharging) {
               !isMinerActive && Toolbar.togglePower();
             } else {
-              showInterstitial('Saving battery…');
-              showInterstitial('Click to override…', 3000);
+              showInterstitial(helpText.savingBattery);
+              showInterstitial(helpText.clickToOverride, 3000);
             }
           });
         }
@@ -369,11 +398,11 @@
         const isDeviceCharging = battery.charging;
         if (isDeviceCharging) {
           if (isDeviceOnline) return Toolbar.togglePower();
-          showInterstitial('Network disconnected…');
-          showInterstitial('Mining suspended…', 3000);
+          showInterstitial(helpText.networkDisconnected);
+          showInterstitial(helpText.miningPaused, 3000);
         } else {
-          showInterstitial('Power unplugged…');
-          showInterstitial('Miner on standby…', 3000);
+          showInterstitial(helpText.powerUnplugged);
+          showInterstitial(helpText.miningPaused, 3000);
         }
       }); // zip it up and zip it out
     });
