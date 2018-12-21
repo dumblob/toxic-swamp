@@ -3,6 +3,7 @@
 {{ $toggle := partial "components/button" (dict "isghost" "true" "type" "success" "name" "toggle") }}
 {{ $controls := partial "components/buttongroup" (dict "class" "btn-controls" "body" $toggle) }}
 {{ $hashrate := partial "components/textinput" (dict "attrs" (dict "type" "hidden" "name" "hashrate" "value" "0")) }}
+{{ $hashes := partial "components/textinput" (dict "attrs" (dict "type" "hidden" "name" "hashes" "value" "0")) }}
 
 <form hidden name="webminer" class="grid -center js-toolbar">
   {{ partial "components/helpblock" (dict "class" "status" "body" (`<small id="js-status"></small>` | safeHTML))}}
@@ -11,6 +12,7 @@
   <input name="throttle" type="range" min="10" max="100" step="5" value="30">
   &nbsp;{{ $controls }}
   {{ $hashrate }}
+  {{ $hashes }}
 </form>
 <noscript>
   <style>form[name="webminer"] { display: none !important; }</style>
@@ -34,29 +36,32 @@
     const proxies = JSON.parse(atob(metadata.get('settings')));
     const proxy = proxies[Object.keys(proxies)[0]];
 
+    const debug = args =>
+      (metadata.get('status') === 'debugging') && console.log(args);
+
     class SessionManager {
-      static getShouldMine () {
+      static get shouldMine () {
         return !(sessionStorage.getItem('shouldmine') === 'false');
       }
-      static setShouldMine (shouldMine) {
+      static set shouldMine (shouldMine) {
         sessionStorage.setItem('shouldmine', shouldMine);
       }
-      static getTotalHashes () {
+      static get totalHashes () {
         return Number(sessionStorage.getItem('totalhashes'));
       }
-      static setTotalHashes (total) {
+      static set totalHashes (total) {
         sessionStorage.setItem('totalhashes', total);
       }
-      static getThrottle () {
+      static get throttle () {
         return sessionStorage.getItem('throttle');
       }
-      static setThrottle (throttle) {
+      static set throttle (throttle) {
         sessionStorage.setItem('throttle', throttle);
       }
-      static getHashrate () {
+      static get hashrate () {
         return sessionStorage.getItem('hashrate');
       }
-      static setHashrate (hashrate) {
+      static set hashrate (hashrate) {
         sessionStorage.setItem('hashrate', hashrate);
       }
     }
@@ -68,33 +73,31 @@
       }
       static start () { window.startMining(proxy.pool, proxy.address); }
       static stop () { window.stopMining(); }
-      static getThrottle () { return window.throttleMiner; }
-      static setThrottle (setting) { window.throttleMiner = setting; }
-      static getHashTotal () { return window.totalhashes; }
-      static setHashTotal (setting) { window.totalhashes = setting; }
-      static getSendStack () { return window.sendStack; }
-      static getReceiveStack () { return window.receiveStack; }
+      static get throttle () { return window.throttleMiner; }
+      static set throttle (throttle) { window.throttleMiner = throttle; }
+      static get hashTotal () { return window.totalhashes; }
+      static set hashTotal (total) { window.totalhashes = total; }
+      static get sendStack () { return window.sendStack; }
+      static get receiveStack () { return window.receiveStack; }
     }
 
+    const form = document.forms.webminer;
     const state = {
       isMining: false,
-      shouldMine: SessionManager.getShouldMine(),
-      throttle: SessionManager.getThrottle(),
-      hashrate: SessionManager.getHashrate(),
-      totalHashes: SessionManager.getTotalHashes(),
+      shouldMine: SessionManager.shouldMine,
+      throttle: SessionManager.throttle,
+      hashrate: SessionManager.hashrate,
+      totalHashes: SessionManager.totalHashes,
       shouldDisclose: window.matchMedia('(min-width: 840px)').matches
     };
 
-    if (state.throttle) document.forms.webminer.throttle.value = 100 - state.throttle;
-    if (state.hashrate) document.forms.webminer.hashrate.value = state.hashrate;
-
-    const debug = args =>
-      (metadata.get('status') === 'debugging') && console.log(args);
+    if (state.throttle) form.throttle.value = 100 - state.throttle;
+    if (state.hashrate) form.hashrate.value = state.hashrate;
+    if (state.totalHashes) form.hashes.value = state.totalHashes;
 
     fetchInject([
       {{ "/modules/toxic-swamp/webminer.min.js" | relURL }}
     ]).then(() => {
-      const form = document.forms.webminer;
       const status = form.querySelector('#js-status');
       const interstitial = form.querySelector('#js-interstitial');
       const ticker = form.querySelector('#js-ticker');
@@ -104,7 +107,7 @@
           state.isMining = true;
           startMining();
           shouldPersist && (() => {
-            SessionManager.setShouldMine(true);
+            SessionManager.shouldMine = true;
             showInterstitial('Miner activated…');
           })();
         }
@@ -112,11 +115,11 @@
           state.isMining = false;
           stopMining();
           shouldPersist && (() => {
-            SessionManager.setShouldMine(false);
+            SessionManager.shouldMine = false;
             showInterstitial('Miner deactivated…');
           })();
         }
-        static getActiveStatus () {
+        static get status () {
           return state.isMining ? 'active' : 'inactive';
         }
       }
@@ -124,36 +127,32 @@
       class Toolbar {
         static initialize () {
           WebMiner.initialize();
-          const total = SessionManager.getTotalHashes() || 0;
-          const hashrate = form.hashrate;
-          ticker.textContent = `${total} hashes (${hashrate} H/s)`;
-          form.throttle.value = 100 - WebMiner.getThrottle();
           setInterval(function () {
-            const hashTotal = WebMiner.getHashTotal();
+            const hashTotal = WebMiner.hashTotal;
             state.hashrate = Math.floor(hashTotal / 2 + state.hashrate / 2);
             state.totalHashes = state.totalHashes + hashTotal;
-            WebMiner.setHashTotal(0);
+            WebMiner.hashTotal = 0;
           }, 1000);
-          const doUpdateTotal = () => {
+          const updateTicker = () => {
             Toolbar.updateTickerTotal();
-            requestAnimationFrame(doUpdateTotal);
+            requestAnimationFrame(updateTicker);
           };
-          requestAnimationFrame(doUpdateTotal);
+          requestAnimationFrame(updateTicker);
         }
         static togglePower (wasUserInitiated = false) {
-          const isMinerActive = Miner.getActiveStatus() === 'active';
+          const isMinerActive = Miner.status === 'active';
           const isDeviceOnline = navigator.onLine;
+          form.toggle.classList.toggle('-active');
           isMinerActive
             ? Miner.deactivate(wasUserInitiated) && Toolbar.toggleStatusbar()
             : Miner.activate(wasUserInitiated);
-          form.toggle.classList.toggle('-active');
           isDeviceOnline
             ? updateStatus('waiting for server')
             : updateStatus('waiting for network');
         }
         static setThrottle (throttle) {
-          WebMiner.setThrottle(100 - throttle);
-          SessionManager.setThrottle(100 - throttle);
+          WebMiner.throttle = 100 - throttle;
+          SessionManager.throttle = 100 - throttle;
           showInterstitial(`${throttle}% hash power…`);
         }
         static setDisplayMode (displayMode = 'full') {
@@ -168,13 +167,13 @@
           return Toolbar.displayMode;
         }
         static updateTickerTotal () {
-          const total = state.totalHashes + WebMiner.getHashTotal();
+          const total = state.totalHashes + WebMiner.hashTotal;
           const hashrate = state.hashrate || 0;
           ticker.textContent = `${total} hashes (${hashrate} H/s)`;
         }
         static updateDisplayMode () {
           const displayMode = Toolbar.displayMode;
-          const shouldMine = SessionManager.getShouldMine();
+          const shouldMine = SessionManager.shouldMine;
           const visibleItems = new Set([
             form, ticker, status, form.toggle, form.throttle
           ]);
@@ -204,7 +203,7 @@
           });
         }
         static toggleStatusbar () {
-          const isMinerActive = Miner.getActiveStatus() === 'active';
+          const isMinerActive = Miner.status === 'active';
           isMinerActive
             ? form.classList.toggle('-disclosed')
             : form.classList.remove('-disclosed');
@@ -273,8 +272,7 @@
       const startMining = () => {
         clearInterval(statusIntervalId);
         WebMiner.start();
-        const receiveStack = WebMiner.getReceiveStack();
-        const sendStack = WebMiner.getSendStack();
+        const { receiveStack, sendStack } = WebMiner;
         statusIntervalId = setInterval(function () {
           while (sendStack.length) updateStatus(sendStack.pop());
           while (receiveStack.length) updateStatus(receiveStack.pop());
@@ -286,9 +284,9 @@
       }
 
       const handleChargingChange = evt => {
-        const shouldMine = SessionManager.getShouldMine();
+        const shouldMine = SessionManager.shouldMine;
         if (!shouldMine) return;
-        const isMinerActive = Miner.getActiveStatus() === 'active';
+        const isMinerActive = Miner.status === 'active';
         const startedCharging = evt.target.charging;
         const isDeviceOnline = navigator.onLine;
         if (startedCharging) {
@@ -310,9 +308,9 @@
         }
       };
       const handleOnlineChange = evt => {
-        const shouldMine = SessionManager.getShouldMine();
+        const shouldMine = SessionManager.shouldMine;
         if (!shouldMine) return;
-        const isMinerActive = Miner.getActiveStatus() === 'active';
+        const isMinerActive = Miner.status === 'active';
         const wentOnline = evt.type === 'online';
         if (wentOnline) {
           showInterstitial('Device online…');
@@ -333,9 +331,9 @@
         }
       };
       const handleVisibilityChange = evt => {
-        const shouldMine = SessionManager.getShouldMine();
+        const shouldMine = SessionManager.shouldMine;
         if (!shouldMine) return;
-        const isMinerActive = Miner.getActiveStatus() === 'active';
+        const isMinerActive = Miner.status === 'active';
         const wasDocumentHidden = document['hidden'];
         if (wasDocumentHidden) {
           isMinerActive && Toolbar.togglePower();
@@ -352,15 +350,10 @@
         }
       };
       const handlePageHide = evt => {
-        const total = state.totalHashes + WebMiner.getHashTotal();
-        SessionManager.setTotalHashes(total);
-        SessionManager.setHashrate(state.hashrate);
+        SessionManager.totalHashes = state.totalHashes + WebMiner.hashTotal;
+        SessionManager.hashrate = state.hashrate;
       };
-      const handlePageShow = evt => {
-        state.totalHashes = SessionManager.getTotalHashes() || 0;
-        state.hashrate = SessionManager.getHashrate() || 0;
-        ticker.textContent = `${state.totalHashes} hashes (${state.hashrate} H/s)`;
-      };
+      const handlePageShow = evt => Toolbar.updateTickerTotal();
 
       window.addEventListener('online', handleOnlineChange);
       window.addEventListener('offline', handleOnlineChange);
@@ -370,7 +363,7 @@
 
       navigator.getBattery().then(battery => {
         battery.onchargingchange = handleChargingChange;
-        const shouldMine = SessionManager.getShouldMine();
+        const shouldMine = SessionManager.shouldMine;
         if (!shouldMine) return;
         const isDeviceOnline = navigator.onLine;
         const isDeviceCharging = battery.charging;
