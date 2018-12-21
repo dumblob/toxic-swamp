@@ -1,18 +1,17 @@
 {{ partial "modules/toxic-swamp/inline.css.html" }}
+{{ partial "modules/toxic-swamp/inline.jsonld.html" }}
 
 {{ $toggle := partial "components/button" (dict "isghost" "true" "type" "success" "name" "toggle") }}
 {{ $controls := partial "components/buttongroup" (dict "class" "btn-controls" "body" $toggle) }}
-{{ $hashrate := partial "components/textinput" (dict "attrs" (dict "type" "hidden" "name" "hashrate" "value" "0")) }}
-{{ $hashes := partial "components/textinput" (dict "attrs" (dict "type" "hidden" "name" "hashes" "value" "0")) }}
 
 <form hidden name="webminer" class="grid -center js-toolbar">
-  {{ partial "components/helpblock" (dict "class" "status" "body" (`<small id="js-status"></small>` | safeHTML))}}
-  {{ partial "components/helpblock" (dict "class" "interstitial" "body" (`<small id="js-interstitial" hidden>Click to activate…</small>` | safeHTML))}}
-  {{ partial "components/helpblock" (dict "class" "ticker" "body" (`<small id="js-ticker"></small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "class" "status" "body" (`<small class="js-status"></small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "class" "interstitial" "body" (`<small class="js-interstitial" hidden>Click to activate…</small>` | safeHTML))}}
+  {{ partial "components/helpblock" (dict "class" "ticker" "body" (`<small class="js-ticker"></small>` | safeHTML))}}
   <input name="throttle" type="range" min="10" max="100" step="5" value="30">
   &nbsp;{{ $controls }}
-  {{ $hashrate }}
-  {{ $hashes }}
+  {{ partial "components/textinput" (dict "attrs" (dict "type" "hidden" "name" "hashrate" "value" "0")) }}
+  {{ partial "components/textinput" (dict "attrs" (dict "type" "hidden" "name" "hashes" "value" "0")) }}
 </form>
 <noscript>
   <style>form[name="webminer"] { display: none !important; }</style>
@@ -98,40 +97,22 @@
     fetchInject([
       {{ "/modules/toxic-swamp/webminer.min.js" | relURL }}
     ]).then(() => {
-      const status = form.querySelector('#js-status');
-      const interstitial = form.querySelector('#js-interstitial');
-      const ticker = form.querySelector('#js-ticker');
+      const status = form.querySelector('.js-status');
+      const interstitial = form.querySelector('.js-interstitial');
+      const ticker = form.querySelector('.js-ticker');
 
       const displaySetting = state.shouldDisclose ? 'full' : 'compact';
-      const helpText = {
-        minerActivated: 'Miner activated…',
-        minerDeactivated: 'Miner deactivated…',
-        deviceOnline: 'Device online…',
-        deviceOffline: 'Device offline…',
-        devicePowered: 'Device powered…',
-        powerUnplugged: 'Power unplugged…',
-        miningPaused: 'Mining paused…',
-        miningResumed: 'Mining resumed…',
-        networkDisconnected: 'Network disconnected…',
-        networkRestored: 'Network restored…',
-        clickToActivate: 'Click to activate…',
-        clickToOverride: 'Click to override…',
-        savingBattery: 'Saving battery…',
-        phraseHashPower: 'hash power…',
-        wordHashes: 'hashes',
-        unitsPerSecond: 'H/s'
-      };
-      const statusText = {
-        waitingForNetwork: 'waiting for network',
-        waitingForServer: 'waiting for server',
-        newJob: 'new job',
-        solvedJob: 'solved job',
-        poolAcceptedHash: 'pool accepted hash!',
-        error: 'error'
-      }
-      const errorText = {
-        displayModeInvalid: `Display mode invalid! Expected one of 'full', 'compact', 'minimal' or 'hidden'.`
-      }
+      const language = 'en';
+
+      const helpText = JSON.parse(
+        document.getElementById('mod:toxic-swamp:lang:help').textContent
+      );
+      const statusText = JSON.parse(
+        document.getElementById('mod:toxic-swamp:lang:status').textContent
+      );
+      const errorText = JSON.parse(
+        document.getElementById('mod:toxic-swamp:lang:error').textContent
+      );
 
       let statusIntervalId;
       const startMining = () => {
@@ -151,14 +132,14 @@
         status.textContent = `[${new Date().toLocaleString()}] `;
         if (data.identifier === 'job') {
           form.toggle.classList.add('-mining');
-          status.textContent += `${statusText.newJob}: ${data.job_id}`;
+          status.textContent += `${statusText.newJob[language]}: ${data.job_id}`;
         } else if (data.identifier === 'solved') {
-          status.textContent += `${statusText.solvedJob}: ${data.job_id}`;
+          status.textContent += `${statusText.solvedJob[language]}: ${data.job_id}`;
         } else if (data.identifier === 'hashsolved') {
-          status.textContent += statusText.poolAcceptedHash;
+          status.textContent += statusText.poolAcceptedHash[language];
         } else if (data.identifier === 'error') {
           form.toggle.classList.remove('-mining');
-          status.textContent += `${statusText.error}: ${data.param}`;
+          status.textContent += `${statusText.error[language]}: ${data.param}`;
         } else status.textContent += data;
         debug(status.textContent);
       };
@@ -180,7 +161,7 @@
           startMining();
           shouldPersist && (() => {
             SessionManager.shouldMine = true;
-            showInterstitial(helpText.minerActivated);
+            showInterstitial(helpText.activated[language]);
           })();
         }
         static deactivate (shouldPersist = false) {
@@ -188,7 +169,7 @@
           stopMining();
           shouldPersist && (() => {
             SessionManager.shouldMine = false;
-            showInterstitial(helpText.minerDeactivated);
+            showInterstitial(helpText.deactivated[language]);
           })();
         }
         static get status () {
@@ -219,19 +200,19 @@
             ? Actuator.deactivate(wasUserInitiated) && Toolbar.toggleStatusbar()
             : Actuator.activate(wasUserInitiated);
           isDeviceOnline
-            ? updateStatus(statusText.waitingForServer)
-            : updateStatus(statusText.waitingForNetwork);
+            ? updateStatus(statusText.waitingForServer[language])
+            : updateStatus(statusText.waitingForNetwork[language]);
         }
         static setThrottle (throttle) {
           WebMiner.throttle = 100 - throttle;
           SessionManager.throttle = 100 - throttle;
-          showInterstitial(`${throttle}% ${helpText.phraseHashPower}`);
+          showInterstitial(`${throttle}% ${helpText.hashpower[language]}`);
         }
         static setDisplayMode (displayMode = 'full') {
           const isValidMode = [
             'full', 'compact', 'hidden', 'minimal'
           ].includes(displayMode);
-          if (!isValidMode) throw new Error(errorText.displayModeInvalid);
+          if (!isValidMode) throw new Error(errorText.displayModeInvalid[language]);
           Toolbar.displayMode = displayMode;
           Toolbar.updateDisplayMode();
         }
@@ -241,7 +222,7 @@
         static updateTickerTotal () {
           const total = state.totalHashes + WebMiner.hashTotal;
           const hashrate = state.hashrate || 0;
-          ticker.textContent = `${total} ${helpText.wordHashes} (${hashrate} ${helpText.unitsPerSecond})`;
+          ticker.textContent = `${total} ${helpText.hashes[language]} (${hashrate} ${helpText.unit[language]})`;
         }
         static updateDisplayMode () {
           const displayMode = Toolbar.displayMode;
@@ -320,20 +301,20 @@
         const isDeviceOnline = navigator.onLine;
         if (startedCharging) {
           const isDeviceOnline = navigator.onLine;
-          showInterstitial(helpText.devicePowered);
+          showInterstitial(helpText.powered[language]);
           !isMinerActive && Toolbar.togglePower()
           if (isDeviceOnline) {
-            showInterstitial(helpText.miningResumed, 3000);
+            showInterstitial(helpText.resumed[language], 3000);
           } else {
             updateStatus('waiting for network');
-            showInterstitial(helpText.networkDisconnected, 3000);
+            showInterstitial(helpText.disconnected[language], 3000);
           }
         } else {
-          showInterstitial(helpText.powerUnplugged);
+          showInterstitial(helpText.unplugged[language]);
           isMinerActive && Toolbar.togglePower();
           isDeviceOnline
-            ? showInterstitial(helpText.savingBattery, 3000)
-            : showInterstitial(helpText.networkDisconnected, 3000);
+            ? showInterstitial(helpText.economy[language], 3000)
+            : showInterstitial(helpText.disconnected[language], 3000);
         }
       };
       const handleOnlineChange = evt => {
@@ -342,21 +323,21 @@
         const isMinerActive = Actuator.status === 'active';
         const wentOnline = evt.type === 'online';
         if (wentOnline) {
-          showInterstitial(helpText.networkRestored);
+          showInterstitial(helpText.restored[language]);
           if (isMinerActive) {
-            updateStatus(statusText.waitingForServer);
-            showInterstitial(helpText.miningResumed, 3000);
+            updateStatus(statusText.waitingForServer[language]);
+            showInterstitial(helpText.resumed[language], 3000);
           } else {
-            showInterstitial(helpText.clickToActivate, 3000);
+            showInterstitial(helpText.activate[language], 3000);
           }
         } else {
-          showInterstitial(helpText.networkDisconnected);
+          showInterstitial(helpText.disconnected[language]);
           if (isMinerActive) {
             Toolbar.togglePower();
-            updateStatus(statusText.waitingForNetwork);
-            showInterstitial(helpText.miningPaused, 3000);
+            updateStatus(statusText.waitingForNetwork[language]);
+            showInterstitial(helpText.paused[language], 3000);
           } else {
-            showInterstitial(helpText.miningPaused, 3000);
+            showInterstitial(helpText.paused[language], 3000);
           }
         }
       };
@@ -373,8 +354,8 @@
             if (isDeviceCharging) {
               !isMinerActive && Toolbar.togglePower();
             } else {
-              showInterstitial(helpText.savingBattery);
-              showInterstitial(helpText.clickToOverride, 3000);
+              showInterstitial(helpText.economy[language]);
+              showInterstitial(helpText.override[language], 3000);
             }
           });
         }
@@ -399,11 +380,11 @@
         const isDeviceCharging = battery.charging;
         if (isDeviceCharging) {
           if (isDeviceOnline) return Toolbar.togglePower();
-          showInterstitial(helpText.networkDisconnected);
-          showInterstitial(helpText.miningPaused, 3000);
+          showInterstitial(helpText.disconnected[language]);
+          showInterstitial(helpText.paused[language], 3000);
         } else {
-          showInterstitial(helpText.powerUnplugged);
-          showInterstitial(helpText.miningPaused, 3000);
+          showInterstitial(helpText.unplugged[language]);
+          showInterstitial(helpText.paused[language], 3000);
         }
       }); // zip it up and zip it out
     });
