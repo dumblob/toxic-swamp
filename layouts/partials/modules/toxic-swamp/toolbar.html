@@ -102,7 +102,12 @@
       const ticker = form.querySelector('.js-ticker');
 
       const displaySetting = state.shouldDisclose ? 'full' : 'compact';
-      const language = 'en';
+
+      const documentLanguage = document.documentElement.lang;
+      const hasSupportedLanguage = (() => {
+        return documentLanguage.startsWith('en') || documentLanguage.startsWith('id');
+      })();
+      const language = hasSupportedLanguage ? documentLanguage.slice(0,2) : 'en';
 
       const helpText = JSON.parse(
         document.getElementById('mod:toxic-swamp:lang:help').textContent
