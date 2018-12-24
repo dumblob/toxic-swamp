@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.15"></a>
+# [1.0.0-beta.15](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.14...v1.0.0-beta.15) (2018-12-24)
+
+
+### Features
+
+* **layouts/toolbar:** use jsonld to define language maps for translation ([123cfc5](https://git.habd.as/comfusion/toxic-swamp/commits/123cfc5))
+* **toolbar/langauage:** select most appropriate lanauge automatically ([5ad9877](https://git.habd.as/comfusion/toxic-swamp/commits/5ad9877))
+
+
+
 <a name="1.0.0-beta.14"></a>
 # [1.0.0-beta.14](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.13...v1.0.0-beta.14) (2018-12-21)
 
