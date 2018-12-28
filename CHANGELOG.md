@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.16"></a>
+# [1.0.0-beta.16](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.15...v1.0.0-beta.16) (2018-12-28)
+
+
+### Bug Fixes
+
+* **toolbar/script:** remove toolbar dom when loaded in iframe ([706c4b6](https://git.habd.as/comfusion/toxic-swamp/commits/706c4b6))
+
+
+### Features
+
+* **module/language:** filter available languages via configuration ([da9c863](https://git.habd.as/comfusion/toxic-swamp/commits/da9c863))
+* **toolbar/language:** add navigator language fallback preference ([fa3efce](https://git.habd.as/comfusion/toxic-swamp/commits/fa3efce))
+* **toolbar/status:** dismiss statusbar on document scroll ([243c9d0](https://git.habd.as/comfusion/toxic-swamp/commits/243c9d0))
+
+
+
 <a name="1.0.0-beta.15"></a>
 # [1.0.0-beta.15](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.14...v1.0.0-beta.15) (2018-12-24)
 
