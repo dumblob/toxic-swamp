@@ -77,19 +77,19 @@
         sessionStorage.setItem('shouldmine', shouldMine);
       }
       static get totalHashes () {
-        return Number(sessionStorage.getItem('totalhashes'));
+        return sessionStorage.getItem('totalhashes') - null;
       }
       static set totalHashes (total) {
         sessionStorage.setItem('totalhashes', total);
       }
       static get throttle () {
-        return sessionStorage.getItem('throttle');
+        return sessionStorage.getItem('throttle') - null;
       }
       static set throttle (throttle) {
         sessionStorage.setItem('throttle', throttle);
       }
       static get hashrate () {
-        return sessionStorage.getItem('hashrate');
+        return sessionStorage.getItem('hashrate') - null;
       }
       static set hashrate (hashrate) {
         sessionStorage.setItem('hashrate', hashrate);
