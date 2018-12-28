@@ -280,6 +280,15 @@
           isMinerActive
             ? form.classList.toggle('-disclosed')
             : form.classList.remove('-disclosed');
+          const isDisclosed = form.classList.contains('-disclosed');
+          if (isMinerActive && isDisclosed) {
+            const { defaultView } = document;
+            const handler = () => requestAnimationFrame(() => {
+              isDisclosed && form.classList.remove('-disclosed');
+              defaultView.removeEventListener('scroll', handler);
+            });
+            defaultView.addEventListener('scroll', handler);
+          }
         }
         static registerListeners () {
           form.addEventListener(
