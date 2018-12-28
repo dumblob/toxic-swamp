@@ -4,6 +4,9 @@
   {{ else }}
     <meta title="mod:toxic-swamp" content="status:enabled">
   {{ end }}
+  {{ with .settings.translations }}
+    <meta title="mod:toxic-swamp" content="translations:{{ . | jsonify }}">
+  {{ end }}
   {{ $scratch := newScratch }}
   {{ range .settings.proxies }}
     {{ $proxySettings := (index $.data.modules.toxic_swamp.proxies .) }}

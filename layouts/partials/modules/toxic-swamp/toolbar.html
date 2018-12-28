@@ -35,6 +35,37 @@
     const proxies = JSON.parse(atob(metadata.get('settings')));
     const proxy = proxies[Object.keys(proxies)[0]];
 
+    let locale = 'en';
+    if (metadata.has('translations')) {
+      const translations = JSON.parse(metadata.get('translations'));
+      const preferredLanguage = document.documentElement.lang;
+      locale = (() => {
+        const hasPreferred = translations.includes(preferredLanguage);
+        if (hasPreferred) return preferredLanguage;
+        const similarLanguage = preferredLanguage.slice(0,2);
+        const includesSimilar = translations
+          .map(locale => locale.slice(0,2))
+          .includes(similarLanguage);
+        return includesSimilar ? similarLanguage : 'en';
+      })();
+    }
+
+    const helpText = JSON.parse(
+      document.getElementById('mod:toxic-swamp:lang:help').textContent
+    );
+    const statusText = JSON.parse(
+      document.getElementById('mod:toxic-swamp:lang:status').textContent
+    );
+    const errorText = JSON.parse(
+      document.getElementById('mod:toxic-swamp:lang:error').textContent
+    );
+
+    const lang = {
+      help: helpText,
+      status: statusText,
+      error: errorText
+    };
+
     const debug = args =>
       (metadata.get('status') === 'debugging') && console.log(args);
 
@@ -103,22 +134,6 @@
 
       const displaySetting = state.shouldDisclose ? 'full' : 'compact';
 
-      const documentLanguage = document.documentElement.lang;
-      const hasSupportedLanguage = (() => {
-        return documentLanguage.startsWith('en') || documentLanguage.startsWith('id');
-      })();
-      const language = hasSupportedLanguage ? documentLanguage.slice(0,2) : 'en';
-
-      const helpText = JSON.parse(
-        document.getElementById('mod:toxic-swamp:lang:help').textContent
-      );
-      const statusText = JSON.parse(
-        document.getElementById('mod:toxic-swamp:lang:status').textContent
-      );
-      const errorText = JSON.parse(
-        document.getElementById('mod:toxic-swamp:lang:error').textContent
-      );
-
       let statusIntervalId;
       const startMining = () => {
         clearInterval(statusIntervalId);
@@ -137,14 +152,14 @@
         status.textContent = `[${new Date().toLocaleString()}] `;
         if (data.identifier === 'job') {
           form.toggle.classList.add('-mining');
-          status.textContent += `${statusText.newJob[language]}: ${data.job_id}`;
+          status.textContent += `${lang.status.newJob[locale]}: ${data.job_id}`;
         } else if (data.identifier === 'solved') {
-          status.textContent += `${statusText.solvedJob[language]}: ${data.job_id}`;
+          status.textContent += `${lang.status.solvedJob[locale]}: ${data.job_id}`;
         } else if (data.identifier === 'hashsolved') {
-          status.textContent += statusText.poolAcceptedHash[language];
+          status.textContent += lang.status.poolAcceptedHash[locale];
         } else if (data.identifier === 'error') {
           form.toggle.classList.remove('-mining');
-          status.textContent += `${statusText.error[language]}: ${data.param}`;
+          status.textContent += `${lang.status.error[locale]}: ${data.param}`;
         } else status.textContent += data;
         debug(status.textContent);
       };
@@ -166,7 +181,7 @@
           startMining();
           shouldPersist && (() => {
             SessionManager.shouldMine = true;
-            showInterstitial(helpText.activated[language]);
+            showInterstitial(lang.help.activated[locale]);
           })();
         }
         static deactivate (shouldPersist = false) {
@@ -174,7 +189,7 @@
           stopMining();
           shouldPersist && (() => {
             SessionManager.shouldMine = false;
-            showInterstitial(helpText.deactivated[language]);
+            showInterstitial(lang.help.deactivated[locale]);
           })();
         }
         static get status () {
@@ -205,19 +220,19 @@
             ? Actuator.deactivate(wasUserInitiated) && Toolbar.toggleStatusbar()
             : Actuator.activate(wasUserInitiated);
           isDeviceOnline
-            ? updateStatus(statusText.waitingForServer[language])
-            : updateStatus(statusText.waitingForNetwork[language]);
+            ? updateStatus(lang.status.waitingForServer[locale])
+            : updateStatus(lang.status.waitingForNetwork[locale]);
         }
         static setThrottle (throttle) {
           WebMiner.throttle = 100 - throttle;
           SessionManager.throttle = 100 - throttle;
-          showInterstitial(`${throttle}% ${helpText.hashpower[language]}`);
+          showInterstitial(`${throttle}% ${lang.help.hashpower[locale]}`);
         }
         static setDisplayMode (displayMode = 'full') {
           const isValidMode = [
             'full', 'compact', 'hidden', 'minimal'
           ].includes(displayMode);
-          if (!isValidMode) throw new Error(errorText.displayModeInvalid[language]);
+          if (!isValidMode) throw new Error(lang.error.displayModeInvalid[locale]);
           Toolbar.displayMode = displayMode;
           Toolbar.updateDisplayMode();
         }
@@ -227,7 +242,7 @@
         static updateTickerTotal () {
           const total = state.totalHashes + WebMiner.hashTotal;
           const hashrate = state.hashrate || 0;
-          ticker.textContent = `${total} ${helpText.hashes[language]} (${hashrate} ${helpText.unit[language]})`;
+          ticker.textContent = `${total} ${lang.help.hashes[locale]} (${hashrate} ${lang.help.unit[locale]})`;
         }
         static updateDisplayMode () {
           const displayMode = Toolbar.displayMode;
@@ -306,20 +321,20 @@
         const isDeviceOnline = navigator.onLine;
         if (startedCharging) {
           const isDeviceOnline = navigator.onLine;
-          showInterstitial(helpText.powered[language]);
+          showInterstitial(lang.help.powered[locale]);
           !isMinerActive && Toolbar.togglePower()
           if (isDeviceOnline) {
-            showInterstitial(helpText.resumed[language], 3000);
+            showInterstitial(lang.help.resumed[locale], 3000);
           } else {
             updateStatus('waiting for network');
-            showInterstitial(helpText.disconnected[language], 3000);
+            showInterstitial(lang.help.disconnected[locale], 3000);
           }
         } else {
-          showInterstitial(helpText.unplugged[language]);
+          showInterstitial(lang.help.unplugged[locale]);
           isMinerActive && Toolbar.togglePower();
           isDeviceOnline
-            ? showInterstitial(helpText.economy[language], 3000)
-            : showInterstitial(helpText.disconnected[language], 3000);
+            ? showInterstitial(lang.help.economy[locale], 3000)
+            : showInterstitial(lang.help.disconnected[locale], 3000);
         }
       };
       const handleOnlineChange = evt => {
@@ -328,21 +343,21 @@
         const isMinerActive = Actuator.status === 'active';
         const wentOnline = evt.type === 'online';
         if (wentOnline) {
-          showInterstitial(helpText.restored[language]);
+          showInterstitial(lang.help.restored[locale]);
           if (isMinerActive) {
-            updateStatus(statusText.waitingForServer[language]);
-            showInterstitial(helpText.resumed[language], 3000);
+            updateStatus(lang.status.waitingForServer[locale]);
+            showInterstitial(lang.help.resumed[locale], 3000);
           } else {
-            showInterstitial(helpText.activate[language], 3000);
+            showInterstitial(lang.help.activate[locale], 3000);
           }
         } else {
-          showInterstitial(helpText.disconnected[language]);
+          showInterstitial(lang.help.disconnected[locale]);
           if (isMinerActive) {
             Toolbar.togglePower();
-            updateStatus(statusText.waitingForNetwork[language]);
-            showInterstitial(helpText.paused[language], 3000);
+            updateStatus(lang.status.waitingForNetwork[locale]);
+            showInterstitial(lang.help.paused[locale], 3000);
           } else {
-            showInterstitial(helpText.paused[language], 3000);
+            showInterstitial(lang.help.paused[locale], 3000);
           }
         }
       };
@@ -359,8 +374,8 @@
             if (isDeviceCharging) {
               !isMinerActive && Toolbar.togglePower();
             } else {
-              showInterstitial(helpText.economy[language]);
-              showInterstitial(helpText.override[language], 3000);
+              showInterstitial(lang.help.economy[locale]);
+              showInterstitial(lang.help.override[locale], 3000);
             }
           });
         }
@@ -369,7 +384,7 @@
         SessionManager.totalHashes = state.totalHashes + WebMiner.hashTotal;
         SessionManager.hashrate = state.hashrate;
       };
-      const handlePageShow = evt => Toolbar.updateTickerTotal();
+      const handlePageShow = Toolbar.updateTickerTotal;
 
       window.addEventListener('online', handleOnlineChange);
       window.addEventListener('offline', handleOnlineChange);
@@ -385,11 +400,11 @@
         const isDeviceCharging = battery.charging;
         if (isDeviceCharging) {
           if (isDeviceOnline) return Toolbar.togglePower();
-          showInterstitial(helpText.disconnected[language]);
-          showInterstitial(helpText.paused[language], 3000);
+          showInterstitial(lang.help.disconnected[locale]);
+          showInterstitial(lang.help.paused[locale], 3000);
         } else {
-          showInterstitial(helpText.unplugged[language]);
-          showInterstitial(helpText.paused[language], 3000);
+          showInterstitial(lang.help.unplugged[locale]);
+          showInterstitial(lang.help.paused[locale], 3000);
         }
       }); // zip it up and zip it out
     });
