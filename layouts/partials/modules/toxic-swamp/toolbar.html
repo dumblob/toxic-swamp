@@ -38,7 +38,7 @@
     let locale = 'en';
     if (metadata.has('translations')) {
       const translations = JSON.parse(metadata.get('translations'));
-      const preferredLanguage = document.documentElement.lang;
+      const preferredLanguage = document.documentElement.lang || navigator.language;
       locale = (() => {
         const hasPreferred = translations.includes(preferredLanguage);
         if (hasPreferred) return preferredLanguage;
