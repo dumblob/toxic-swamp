@@ -1,6 +1,6 @@
 # Toxic Swamp
 
-> CryptoNote/Aeon Web Miner add-on module for After Dark.
+> Monero/Aeon Web Miner add-on module for After Dark.
 
 [![Latest NPM version](https://img.shields.io/npm/v/toxic-swamp.svg?style=flat-square)](https://www.npmjs.com/package/toxic-swamp)
 [![NPM downloads per month](https://img.shields.io/npm/dm/toxic-swamp.svg?style=flat-square)](https://www.npmjs.com/package/toxic-swamp)
