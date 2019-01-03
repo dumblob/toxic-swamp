@@ -43,7 +43,7 @@ View an [interactive demo](https://after-dark.habd.as) and [read the docs](https
     ]
     ```
 
-4. Miner now functional. Rebuild and serve your site to view the changes.
+4. Miner now functional. [Read the docs](https://after-dark.habd.as/module/toxic-swamp/) for help configuring.
 
 For release verification and additional info see the [Toxic Swamp help docs](https://after-dark.habd.as/module/toxic-swamp/).
 
