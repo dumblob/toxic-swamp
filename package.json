@@ -26,7 +26,7 @@
     "aeon"
   ],
   "author": "Multiple",
-  "license": "SEE LICENSE IN SOURCE FILES",
+  "license": "SEE README",
   "devDependencies": {
     "standard-version": "^4.4.0"
   },
