@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.17"></a>
+# [1.0.0-beta.17](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.16...v1.0.0-beta.17) (2019-01-14)
+
+
+### Bug Fixes
+
+* **toolbar/state:** guard against mining in background on power/online change ([74ae2cf](https://git.habd.as/comfusion/toxic-swamp/commits/74ae2cf)), closes [#25](https://git.habd.as/comfusion/toxic-swamp/issues/25)
+
+
+### Features
+
+* **toolbar/langauge:** add russian translations ([39af5cc](https://git.habd.as/comfusion/toxic-swamp/commits/39af5cc))
+
+
+
 <a name="1.0.0-beta.16"></a>
 # [1.0.0-beta.16](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.15...v1.0.0-beta.16) (2018-12-28)
 
