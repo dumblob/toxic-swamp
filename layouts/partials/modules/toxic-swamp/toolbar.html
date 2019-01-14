@@ -327,6 +327,8 @@
       const handleChargingChange = evt => {
         const shouldMine = SessionManager.shouldMine;
         if (!shouldMine) return;
+        const isDocumentVisible = document.visibilityState === 'visible';
+        if (!isDocumentVisible) return;
         const isMinerActive = Actuator.status === 'active';
         const startedCharging = evt.target.charging;
         const isDeviceOnline = navigator.onLine;
@@ -351,6 +353,8 @@
       const handleOnlineChange = evt => {
         const shouldMine = SessionManager.shouldMine;
         if (!shouldMine) return;
+        const isDocumentVisible = document.visibilityState === 'visible';
+        if (!isDocumentVisible) return;
         const isMinerActive = Actuator.status === 'active';
         const wentOnline = evt.type === 'online';
         if (wentOnline) {
