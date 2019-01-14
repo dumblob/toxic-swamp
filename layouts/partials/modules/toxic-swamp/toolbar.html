@@ -98,8 +98,8 @@
 
     class WebMiner {
       static initialize () {
-        window.server = window._server;
-        window.throttleMiner = state.throttle || window._throttleMiner;
+        WebMiner.server = proxy.server;
+        WebMiner.throttle = state.throttle || window._throttleMiner;
       }
       static start () { window.startMining(proxy.pool, proxy.address); }
       static stop () { window.stopMining(); }
@@ -107,6 +107,8 @@
       static set throttle (throttle) { window.throttleMiner = throttle; }
       static get hashTotal () { return window.totalhashes; }
       static set hashTotal (total) { window.totalhashes = total; }
+      static get server () { return window.server }
+      static set server (server) { window.server = server; }
       static get sendStack () { return window.sendStack; }
       static get receiveStack () { return window.receiveStack; }
     }
