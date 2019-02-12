@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.18"></a>
+# [1.0.0-beta.18](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.17...v1.0.0-beta.18) (2019-02-12)
+
+
+### Features
+
+* **toolbar/language:** add greek translations ([e5c9175](https://git.habd.as/comfusion/toxic-swamp/commits/e5c9175))
+
+
+
 <a name="1.0.0-beta.17"></a>
 # [1.0.0-beta.17](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.16...v1.0.0-beta.17) (2019-01-14)
 
