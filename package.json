@@ -9,7 +9,7 @@
     }
   },
   "scripts": {
-    "update:client": "cp -i SDK/miner_compressed/webmr.js static/modules/toxic-swamp/webminer.min.js",
+    "update:webminer": "npm up webminerpool && cp -i node_modules/webminerpool-vendored/SDK/miner_compressed/webmr.js static/modules/toxic-swamp/webminer.min.js",
     "test": "while true; do head -n 100 /dev/urandom; sleep 0.1; done | hexdump -C | grep 'ca fe'",
     "integrity": "npm pack --dry-run --json . | grep integrity | cut -d ',' -f1 | cut -d ':' -f2 | tr -d '\" '",
     "release": "standard-version --sign"
@@ -26,9 +26,10 @@
     "aeon"
   ],
   "author": "Multiple",
-  "license": "SEE README",
+  "license": "0BSD",
   "devDependencies": {
-    "standard-version": "^4.4.0"
+    "standard-version": "^4.4.0",
+    "webminerpool-vendored": "git+ssh://git@git.habd.as/comfusion/webminerpool-vendored.git#v1.0.0-rc.0"
   },
   "peerDependencies": {
     "after-dark": ">= 6.13.0"

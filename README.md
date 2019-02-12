@@ -49,4 +49,6 @@ For release verification and additional info see the [Toxic Swamp help docs](htt
 
 ## License
 
-Module code under `data`, `layouts` and `static` licensed under WTFPL. See copyright notices within files in other directories for additional licensing considerations.
+Copyright (C) 2019 by Josh Habdas <jhabdas@protonmail.com>
+
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted.
