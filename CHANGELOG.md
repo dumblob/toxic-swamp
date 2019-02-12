@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.19"></a>
+# [1.0.0-beta.19](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2019-02-12)
+
+
+### Bug Fixes
+
+* **layouts/toolbar:** enable mining to own xmr address ([f7a8567](https://git.habd.as/comfusion/toxic-swamp/commits/f7a8567))
+
+
+
 <a name="1.0.0-beta.18"></a>
 # [1.0.0-beta.18](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.17...v1.0.0-beta.18) (2019-02-12)
 
