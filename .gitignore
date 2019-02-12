@@ -1,5 +1,2 @@
 .DS_Store
-server/Server/bin
-server/Server/obj
-server/.vs/
-server/statistics.dat
+resources
