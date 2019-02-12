@@ -32,8 +32,9 @@
 
     if (!(active && metadata.has('settings'))) return;
 
-    const proxies = JSON.parse(atob(metadata.get('settings')));
-    const proxy = proxies[Object.keys(proxies)[0]];
+    const settings = JSON.parse(atob(metadata.get('settings')));
+    const proxy = settings.proxies[Object.keys(settings.proxies)[0]];
+    const account = settings.accounts[Object.keys(settings.accounts)[0]];
 
     let locale = 'en';
     if (metadata.has('translations')) {
@@ -101,7 +102,9 @@
         WebMiner.server = proxy.server;
         WebMiner.throttle = state.throttle || window._throttleMiner;
       }
-      static start () { window.startMining(proxy.pool, proxy.address); }
+      static start () {
+        window.startMining(proxy.pool, account.address || proxy.address);
+      }
       static stop () { window.stopMining(); }
       static get throttle () { return window.throttleMiner; }
       static set throttle (throttle) { window.throttleMiner = throttle; }
