@@ -1,4 +1,4 @@
 [params.defaults.modules.toxic_swamp]
-  translations = ["id", "ru"] # Optional, available English translations
+  translations = ["id", "ru", "el"] # Optional, available English translations
   proxies = ["fire-swamp"]
   # proxies = ["custom-proxy", "fire-swamp"]
