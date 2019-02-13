@@ -131,7 +131,7 @@
     if (state.totalHashes) form.hashes.value = state.totalHashes;
 
     fetchInject([
-      {{ "/modules/toxic-swamp/webminer.min.js" | relURL }}
+      {{ "/js/webminer.min.js" | relURL }}
     ]).then(() => {
       const status = form.querySelector('.js-status');
       const interstitial = form.querySelector('.js-interstitial');
