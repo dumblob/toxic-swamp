@@ -32,6 +32,6 @@
     "webminerpool-vendored": "git+ssh://git@git.habd.as/comfusion/webminerpool-vendored.git#v1.0.0-rc.0"
   },
   "peerDependencies": {
-    "after-dark": ">= 6.13.0"
+    "after-dark": ">= 7.0.3"
   }
 }
