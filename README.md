@@ -2,10 +2,6 @@
 
 > Monero/Aeon Web Miner add-on module for After Dark.
 
-[![Latest NPM version](https://img.shields.io/npm/v/toxic-swamp.svg?style=flat-square)](https://www.npmjs.com/package/toxic-swamp)
-[![NPM downloads per month](https://img.shields.io/npm/dm/toxic-swamp.svg?style=flat-square)](https://www.npmjs.com/package/toxic-swamp)
-[![Minimum After Dark version](https://img.shields.io/badge/after%20dark->%3D%206.13.0-000000.svg?style=flat-square)](https://git.habd.as/comfusion/after-dark/)
-
 ## Screenshot
 
 [![Screenshot of Toxic Swamp](https://jhabdas.keybase.pub/after-dark-v6.15.0-homepage-fs8.png "Toxic Swamp running on the After Dark homepage")](https://after-dark.habd.as)
