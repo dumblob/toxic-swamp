@@ -25,7 +25,7 @@
     "monero",
     "aeon"
   ],
-  "author": "Multiple",
+  "author": "Josh Habdas",
   "license": "0BSD",
   "devDependencies": {
     "standard-version": "^4.4.0",
