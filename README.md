@@ -43,6 +43,10 @@ View an [interactive demo](https://after-dark.habd.as) and [read the docs](https
 
 For release verification and additional info see the [Toxic Swamp help docs](https://after-dark.habd.as/module/toxic-swamp/).
 
-## License
+## Rights
+
+Copyright (C) 2018, 2019 by Josh Habdas <jhabdas@protonmail.com>
 
 Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted.
+
+This copyright applies to the add-on module code and accompanying documentation and does not extend to the Webminer script itself. The text of the above license is included in the file COPYING in the source.
