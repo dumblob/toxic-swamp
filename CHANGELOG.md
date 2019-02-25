@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.22"></a>
+# [1.0.0-beta.22](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.21...v1.0.0-beta.22) (2019-02-25)
+
+
+### Features
+
+* **layouts/toolbar:** add script integrity to toolbar javascript ([4b68d50](https://git.habd.as/comfusion/toxic-swamp/commits/4b68d50))
+
+
+
 <a name="1.0.0-beta.21"></a>
 # [1.0.0-beta.21](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2019-02-19)
 
