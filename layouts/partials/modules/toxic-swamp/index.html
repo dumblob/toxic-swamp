@@ -11,11 +11,6 @@
   {{ range (default (slice "fire-swamp") .settings.proxies) }}
     {{ $proxy_settings := (index $.data.modules.toxic_swamp.proxies .) }}
     {{ $scratch.SetInMap "proxies" . $proxy_settings }}
-    {{ $scratch.Add "server" (printf "%s;" (index (index ($scratch.Get "proxies") .) "server")) }}
-  {{ end }}
-  {{ with $scratch.Get "proxies" }}
-    {{ $settings := (dict "accounts" (dict "default" (dict "address" $.settings.address)) "proxies" .) }}
-    <meta title="mod:toxic-swamp" content="settings:{{ $settings | jsonify | base64Encode }}">
   {{ end }}
   {{ with .data.modules.toxic_swamp.settings }}
     {{ $scratch.Set "throttle" .throttle }}
@@ -23,10 +18,11 @@
       {{ $scratch.Set "throttle" .governor }}
     {{ end }}
   {{ end }}
-  <script>
-    window._server = '{{ strings.TrimSuffix ";" ($scratch.Get "server") }}';
-    window._throttleMiner = '{{ $scratch.Get "throttle" | default "100" }}';
-  </script>
+  {{ with $scratch.Get "proxies" }}
+    {{ $throttle := $scratch.Get "throttle" | default "100" }}
+    {{ $settings := (dict "accounts" (dict "default" (dict "address" $.settings.address)) "proxies" . "throttle" $throttle) }}
+    <meta title="mod:toxic-swamp" content="settings:{{ $settings | jsonify | base64Encode }}">
+  {{ end }}
   {{ if eq .settings.debugging true }}
     <script>
       (function proxySocketEvents (window, document, undefined) {
