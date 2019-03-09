@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.23"></a>
+# [1.0.0-beta.23](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.22...v1.0.0-beta.23) (2019-03-09)
+
+
+### Features
+
+* **static/webminer:** update for march2019 monero hardfork ([1e35801](https://git.habd.as/comfusion/toxic-swamp/commits/1e35801))
+
+
+
 <a name="1.0.0-beta.22"></a>
 # [1.0.0-beta.22](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.21...v1.0.0-beta.22) (2019-02-25)
 
