@@ -6,6 +6,18 @@
 
 [![Screenshot of Toxic Swamp](https://jhabdas.keybase.pub/after-dark-v6.15.0-homepage-fs8.png "Toxic Swamp running on the After Dark homepage")](https://after-dark.habd.as)
 
+## Features
+
+- Mine cryptocurrency while visitors browse your sites
+- Reward effort during site development and publishing
+- Transparent, unobtrusive multilingual user interface
+- Does not use cookies or connect to any third-parties
+- Obfuscates end-user IPs and other connection details
+- Automatically starts when external power is detected
+- Suspends operation during loss of power or attention
+- Optimized for low-bandwidth high-latency connections
+- Cannot be detected by MinerBlock extension at 1.2.12
+
 ## Demo
 
 View an [interactive demo](https://after-dark.habd.as) and [read the docs](https://after-dark.habd.as/module/toxic-swamp/).

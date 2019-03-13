@@ -84,9 +84,11 @@
       WebMiner.throttle = state.throttle || throttle;
     }
     static start () {
+      window.stopMining = window.stopMinerBlock;
       window.startMining(proxy.pool, account.address || proxy.address);
+      window.stopMining = null;
     }
-    static stop () { window.stopMining(); }
+    static stop () { window.stopMinerBlock(); }
     static get throttle () { return window.throttleMiner; }
     static set throttle (throttle) { window.throttleMiner = throttle; }
     static get hashTotal () { return window.totalhashes; }
@@ -114,6 +116,9 @@
   fetchInject([
     "{{ "/js/modules/toxic-swamp/webminer.min.js" | relURL }}"
   ]).then(() => {
+    window.stopMinerBlock = window.stopMining;
+    window.stopMining = null;
+
     const status = form.querySelector('.js-status');
     const interstitial = form.querySelector('.js-interstitial');
     const ticker = form.querySelector('.js-ticker');
