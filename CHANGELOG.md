@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.26"></a>
+# [1.0.0-beta.26](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.25...v1.0.0-beta.26) (2019-04-01)
+
+
+### Features
+
+* **toolbar/language:** add polish translations ([903d5ee](https://git.habd.as/comfusion/toxic-swamp/commits/903d5ee)), closes [#30](https://git.habd.as/comfusion/toxic-swamp/issues/30)
+
+
+
 <a name="1.0.0-beta.25"></a>
 # [1.0.0-beta.25](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.24...v1.0.0-beta.25) (2019-03-31)
 
