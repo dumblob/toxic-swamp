@@ -55,6 +55,10 @@ View an [interactive demo](https://after-dark.habd.as) and [read the docs](https
 
 For release verification and additional info see the [Toxic Swamp help docs](https://after-dark.habd.as/module/toxic-swamp/).
 
+## Contributing
+
+Please squash commits and use [Convention Commit](https://www.conventionalcommits.org/) messages. Run `npm run commit` after installing NPM dev dependencies for help creating conventional commit messages.
+
 ## Rights
 
 Copyright (C) 2018, 2019 by Josh Habdas <jhabdas@protonmail.com>
