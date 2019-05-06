@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.27"></a>
+# [1.0.0-beta.27](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2019-05-06)
+
+
+### Features
+
+* **toolbar/language:** add italian localization ([146aad4](https://git.habd.as/comfusion/toxic-swamp/commits/146aad4))
+
+
+
 <a name="1.0.0-beta.26"></a>
 # [1.0.0-beta.26](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.25...v1.0.0-beta.26) (2019-04-01)
 
