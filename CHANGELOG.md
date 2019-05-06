@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0-beta.28"></a>
+# [1.0.0-beta.28](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2019-05-06)
+
+
+### Bug Fixes
+
+* **config:** whitelist all translations by default ([23845ff](https://git.habd.as/comfusion/toxic-swamp/commits/23845ff))
+
+
+
 <a name="1.0.0-beta.27"></a>
 # [1.0.0-beta.27](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2019-05-06)
 
