@@ -32,7 +32,7 @@
     "commitizen": "^3.1.1",
     "cz-conventional-changelog": "^2.1.0",
     "standard-version": "^4.4.0",
-    "webminerpool-vendored": "git+ssh://git@git.habd.as/comfusion/webminerpool-vendored.git#v1.0.0-rc.1"
+    "webminerpool-vendored": "git+ssh://git@git.habd.as/comfusion/webminerpool-vendored.git#v1.0.0-rc.2"
   },
   "peerDependencies": {
     "after-dark": ">= 7.0.3"
