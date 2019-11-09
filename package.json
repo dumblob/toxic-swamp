@@ -29,10 +29,10 @@
   "author": "Josh Habdas",
   "license": "0BSD",
   "devDependencies": {
-    "commitizen": "^3.1.1",
+    "commitizen": "^3.1.2",
     "cz-conventional-changelog": "^2.1.0",
     "standard-version": "^4.4.0",
-    "webminerpool-vendored": "git+ssh://git@git.habd.as/comfusion/webminerpool-vendored.git#v1.0.0-rc.2"
+    "webminerpool-vendored": "git+ssh://git@git.habd.as/comfusion/webminerpool-vendored.git#v1.0.0-rc.3"
   },
   "peerDependencies": {
     "after-dark": ">= 7.0.3"
