@@ -1,6 +1,8 @@
-# Change Log
+# Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## [1.0.0-beta.30](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2019-11-09)
 
 <a name="1.0.0-beta.29"></a>
 # [1.0.0-beta.29](https://git.habd.as/comfusion/toxic-swamp/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2019-07-05)
