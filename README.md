@@ -4,7 +4,7 @@
 
 ## Screenshot
 
-[![Screenshot of Toxic Swamp](https://jhabdas.keybase.pub/after-dark-v6.15.0-homepage-fs8.png "Toxic Swamp running on the After Dark homepage")](https://after-dark.habd.as)
+[![Screenshot of Toxic Swamp](https://habd.as/code/toxic-swamp/images/after-dark-v6.15.0-homepage-fs8.png "Toxic Swamp running on the After Dark homepage")](https://after-dark.habd.as)
 
 ## Features
 
